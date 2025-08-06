@@ -83,6 +83,23 @@ jobs:
 
 workflows:
   version: 2
+  test-plan-approve-and-deploy-to-main:
+    unless: << pipeline.parameters.GHA_Action >>
+    jobs:
+      - lint-terraform:
+          filters:
+            branches:
+              only: main
+      - terraform-plan:
+          requires:
+            - lint-terraform
+      - plan-approval:
+          type: approval
+          requires:
+            - terraform-plan
+      - terraform-apply:
+          requires:
+            - plan-approval
   test-plan-and-deploy-to-dev:
     unless: << pipeline.parameters.GHA_Action >>
     jobs:
