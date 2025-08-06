@@ -1,6 +1,7 @@
 variable "aws_access_key" {
   description = "Access key for AWS - find this in IAM"
   type        = string
+ 
   sensitive   = true
 }
 variable "aws_secret_key" {

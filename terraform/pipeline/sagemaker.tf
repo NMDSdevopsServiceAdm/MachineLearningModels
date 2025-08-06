@@ -12,7 +12,8 @@ resource "aws_sagemaker_code_repository" "models_repo" {
   code_repository_name = "sfc-models-github-repository"
 
   git_config {
-    repository_url = "https://github.com/NMDSdevopsServiceAdm/MachineLearningModels.git"
+    repository_url = var.github_repository_url
+    branch         = "main"
   }
 }
 
