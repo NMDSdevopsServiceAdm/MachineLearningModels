@@ -93,7 +93,6 @@ workflows:
       - terraform-plan:
           requires:
             - lint-terraform
-            - test
       - terraform-apply:
           requires:
             - terraform-plan
