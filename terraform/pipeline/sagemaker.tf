@@ -1,5 +1,5 @@
 resource "aws_sagemaker_notebook_instance" "models_notebook" {
-  name                  = "${local.workspace_prefix}-sfc-mlops-notebook"
+  name                  = "${local.workspace_prefix}-models-notebook"
   role_arn              = aws_iam_role.sagemaker_execution_role.arn
   instance_type         = "ml.t3.medium"
   volume_size           = 5
@@ -9,7 +9,7 @@ resource "aws_sagemaker_notebook_instance" "models_notebook" {
 }
 
 resource "aws_sagemaker_code_repository" "models_repo" {
-  code_repository_name = "${local.workspace_prefix}-sfc-models-github-repository"
+  code_repository_name = "${local.workspace_prefix}-models-github-repository"
 
   git_config {
     repository_url = var.github_repository_url
@@ -18,12 +18,12 @@ resource "aws_sagemaker_code_repository" "models_repo" {
 }
 
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "models_lifecycle" {
-  name     = "sfc-mlops-lifecycle"
+  name     = "${local.workspace_prefix}-models-lifecycle"
   on_start = filebase64("scripts/notebooks-on-start.sh")
 }
 
 resource "aws_iam_role" "sagemaker_execution_role" {
-  name = "${local.workspace_prefix}-sfc-sagemaker-execution-role"
+  name = "${local.workspace_prefix}-sagemaker-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -39,7 +39,7 @@ resource "aws_iam_role" "sagemaker_execution_role" {
 
 # may need more frorm here: https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-roles.html#sagemaker-roles-createnotebookinstance-perms
 resource "aws_iam_policy" "sagemaker_full_access_policy" {
-  name   = "${local.workspace_prefix}-sfc-sagemaker-full-access-policy"
+  name   = "${local.workspace_prefix}-sagemaker-full-access-policy"
   policy = templatefile("policy-documents/sagemaker-notebooks.json", { account_id = data.aws_caller_identity.current.account_id })
 }
 

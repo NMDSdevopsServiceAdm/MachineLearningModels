@@ -16,7 +16,7 @@ In Terraform, script files can be referenced as templates (base64 encoded) and a
 
 ```tf
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "models_lifecycle" {
-  name      = "sfc-mlops-lifecycle"
+  name      = "${local.workspace_prefix}-mlops-lifecycle"
   on_create = filebase64("scripts/notebooks-on-create.sh")
   on_start  = filebase64("scripts/notebooks-on-start.sh")
 }
