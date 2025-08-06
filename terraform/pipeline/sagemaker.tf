@@ -13,7 +13,7 @@ resource "aws_sagemaker_code_repository" "models_repo" {
 
   git_config {
     repository_url = var.github_repository_url
-    branch         = "${local.workspace_prefix}"
+    branch         = local.workspace_prefix
   }
 }
 
