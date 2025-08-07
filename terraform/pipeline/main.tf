@@ -6,10 +6,10 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "sfc-terraform-state"
+    bucket         = "sfc-models-terraform-state"
     key            = "statefiles/workspace=default/terraform.tfstate"
     region         = "eu-west-2"
-    dynamodb_table = "terraform-locks"
+    dynamodb_table = "models-terraform-locks"
     encrypt        = true
   }
 }

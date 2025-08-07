@@ -6,16 +6,16 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "sfc-terraform-state"
+    bucket         = "sfc-models-terraform-state"
     key            = "statefiles/workspace=default/backend.tfstate"
     region         = "eu-west-2"
-    dynamodb_table = "terraform-locks"
+    dynamodb_table = "models-terraform-locks"
     encrypt        = true
   }
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "sfc-terraform-state"
+  bucket = "sfc-models-terraform-state"
 }
 
 resource "aws_s3_bucket_versioning" "terraform_state_versioning" {
@@ -37,7 +37,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state_e
 }
 
 resource "aws_dynamodb_table" "terraform_locks" {
-  name         = "terraform-locks"
+  name         = "models-terraform-locks"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
   attribute {
