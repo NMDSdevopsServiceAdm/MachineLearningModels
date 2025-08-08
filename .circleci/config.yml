@@ -39,7 +39,7 @@ jobs:
       - run:
           name: terraform plan
           command: |
-            cd terraform/pipeline
+            cd terraform
             terraform init -input=false
             terraform workspace select ${CIRCLE_BRANCH} || terraform workspace new ${CIRCLE_BRANCH}
             terraform plan -out tfapply
@@ -63,17 +63,17 @@ jobs:
       - run:
           name: terraform apply
           command: |
-            cd terraform/pipeline
+            cd terraform
             terraform apply -auto-approve tfapply
       - run:
           name: save pipeline resources bucket name
           command: |
-            cd terraform/pipeline
+            cd terraform
             echo $(terraform output --raw pipeline_resources_bucket_name) > pipeline_resources_bucket_name
       - run:
           name: save datasets bucket name
           command: |
-            cd terraform/pipeline
+            cd terraform
             echo $(terraform output --raw datasets_bucket_name) > datasets_bucket_name
       - persist_to_workspace:
           root: .
@@ -110,6 +110,10 @@ workflows:
       - terraform-plan:
           requires:
             - lint-terraform
-      - terraform-apply:
+      - plan-approval:
+          type: approval
           requires:
             - terraform-plan
+      - terraform-apply:
+          requires:
+            - plan-approval
