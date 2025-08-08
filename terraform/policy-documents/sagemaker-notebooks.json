@@ -50,6 +50,8 @@
                 "sagemaker:DescribeHyperParameterTuningJob",
                 "sagemaker:UpdateTrainingJob",
                 "sagemaker:BatchGetMetrics",
+                "sagemaker:DescribeNotebookInstance",
+                "SageMaker:StopNotebookInstance",
                 "cloudwatch:PutMetricData",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
