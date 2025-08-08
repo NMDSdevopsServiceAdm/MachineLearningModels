@@ -1,11 +1,11 @@
 provider "aws" {
   region = "eu-west-2"
- default_tags {
-   tags = {
-     CreatedBy    = "MachineLearningModels"
-     CreatedUsing = "Terraform"
-   }
- }
+  default_tags {
+    tags = {
+      CreatedBy    = "MachineLearningModels"
+      CreatedUsing = "Terraform"
+    }
+  }
 }
 
 terraform {
