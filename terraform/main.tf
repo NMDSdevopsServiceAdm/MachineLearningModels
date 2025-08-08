@@ -18,7 +18,7 @@ resource "aws_s3_bucket" "terraform_state" {
   tags = {
     Repo = "MachineLearningModels"
   }
-     
+
   lifecycle {
     prevent_destroy = true
   }
