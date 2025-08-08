@@ -44,12 +44,12 @@ jobs:
             terraform workspace select ${CIRCLE_BRANCH} || terraform workspace new ${CIRCLE_BRANCH}
             terraform plan -out tfapply
       - store_artifacts:
-          path: terraform/pipeline/tfapply
+          path: terraform/tfapply
       - persist_to_workspace:
           root: .
           paths:
-            - terraform/pipeline/tfapply
-            - terraform/pipeline/.*
+            - terraform/tfapply
+            - terraform/.*
             - .
 
   terraform-apply:
@@ -78,8 +78,8 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - ./terraform/pipeline/pipeline_resources_bucket_name
-            - ./terraform/pipeline/datasets_bucket_name
+            - ./terraform/pipeline_resources_bucket_name
+            - ./terraform/datasets_bucket_name
 
 workflows:
   version: 2
