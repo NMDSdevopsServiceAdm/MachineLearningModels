@@ -22,7 +22,7 @@ for env in base /home/ec2-user/anaconda3/envs/*; do
     fi
 
     pip install --upgrade polars
-    conda install polars--name "$env_name" --yes
+    conda install polars --name "$env_name" --yes
 
     source /home/ec2-user/anaconda3/bin/deactivate
 done
@@ -43,7 +43,7 @@ set -ex
 #
 
 # PARAMETERS
-IDLE_TIME=60
+IDLE_TIME=3600
 
 echo "Fetching the autostop script"
 wget https://raw.githubusercontent.com/aws-samples/amazon-sagemaker-notebook-instance-lifecycle-config-samples/master/scripts/auto-stop-idle/autostop.py
