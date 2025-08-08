@@ -21,7 +21,7 @@ for env in base /home/ec2-user/anaconda3/envs/*; do
         continue
     fi
 
-    pip install --upgrade polars
+    # pip install --upgrade polars
     conda install polars --name "$env_name" --yes
 
     source /home/ec2-user/anaconda3/bin/deactivate
@@ -47,6 +47,7 @@ IDLE_TIME=3600
 
 echo "Fetching the autostop script"
 wget https://raw.githubusercontent.com/aws-samples/amazon-sagemaker-notebook-instance-lifecycle-config-samples/master/scripts/auto-stop-idle/autostop.py
+# TODO: point to self once merging into main
 # wget https://raw.githubusercontent.com/NMDSdevopsServiceAdm/MachineLearningModels/tree/main/terraform/scripts/autostop.py
 
 echo "Detecting Python install with boto3 install"
