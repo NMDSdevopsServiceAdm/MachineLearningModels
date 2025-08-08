@@ -16,6 +16,6 @@ output "s3_bucket_arn" {
 }
 
 output "dynamodb_table_name" {
-  value       = aws_dynamodb_table.terraform_locks.name
+  value       = aws_dynamodb_table.terraform_state_lock.name
   description = "The name of the DynamoDB table"
 }

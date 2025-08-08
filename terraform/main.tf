@@ -1,11 +1,3 @@
-
-locals {
-  workspace_prefix           = substr(lower(replace(terraform.workspace, "/[^a-zA-Z0-9]+/", "-")), 0, 30)
-  is_development_environment = local.workspace_prefix != "main"
-}
-
-data "aws_caller_identity" "current" {}
-
 provider "aws" {
   region = "eu-west-2"
 }
@@ -26,9 +18,13 @@ resource "aws_s3_bucket" "terraform_state" {
   tags = {
     Repo = "MachineLearningModels"
   }
+     
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
-resource "aws_s3_bucket_versioning" "terraform_state_versioning" {
+resource "aws_s3_bucket_versioning" "terraform_state" {
   bucket = aws_s3_bucket.terraform_state.id
 
   versioning_configuration {
@@ -46,7 +42,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state_e
   }
 }
 
-resource "aws_dynamodb_table" "terraform_locks" {
+resource "aws_dynamodb_table" "terraform_state_lock" {
   name         = "models-terraform-locks"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
@@ -54,4 +50,11 @@ resource "aws_dynamodb_table" "terraform_locks" {
     name = "LockID"
     type = "S"
   }
+}
+
+data "aws_caller_identity" "current" {}
+
+locals {
+  workspace_prefix           = substr(lower(replace(terraform.workspace, "/[^a-zA-Z0-9]+/", "-")), 0, 30)
+  is_development_environment = local.workspace_prefix != "main"
 }
