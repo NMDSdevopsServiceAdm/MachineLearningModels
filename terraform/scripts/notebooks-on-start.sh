@@ -3,6 +3,29 @@
 set -e
 
 # OVERVIEW
+# This script gets value from Notebook Instance's tag and sets it as environment
+# variable for all process including Jupyter in SageMaker Notebook Instance
+# Note that this script will fail this condition is not met
+#   1. Ensure the Notebook Instance execution role has permission of SageMaker:ListTags
+#
+
+sudo -u ec2-user -i <<'EOF'
+
+touch /etc/profile.d/jupyter-env.sh
+echo "export MODELS_BUCKET=${workspace_prefix}-pipeline-resources" >> /etc/profile.d/jupyter-env.sh
+
+# restart command is dependent on current running Amazon Linux and JupyterLab
+CURR_VERSION=$(cat /etc/os-release)
+if [[ $CURR_VERSION == *$"http://aws.amazon.com/amazon-linux-ami/"* ]]; then
+	sudo initctl restart jupyter-server --no-wait
+else
+	sudo systemctl --no-block restart jupyter-server.service
+fi
+
+EOF
+
+
+# OVERVIEW
 # This script installs a single pip package in all SageMaker conda environments, apart from the JupyterSystemEnv which
 # is a system environment reserved for Jupyter.
 # Note this may timeout if the package installations in all environments take longer than 5 mins, consider using
@@ -20,6 +43,8 @@ for env in base /home/ec2-user/anaconda3/envs/*; do
     if [ $env = 'JupyterSystemEnv' ]; then
         continue
     fi
+
+    export MODELS_BUCKET_2=${workspace_prefix}-pipeline-resources
 
     # pip install --upgrade polars
     conda install polars --name "$env_name" --yes

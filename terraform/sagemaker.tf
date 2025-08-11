@@ -19,7 +19,7 @@ resource "aws_sagemaker_code_repository" "models_repo" {
 
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "models_lifecycle" {
   name     = "${local.workspace_prefix}-models-lifecycle"
-  on_start = filebase64("scripts/notebooks-on-start.sh")
+  on_start = filebase64(templatefile("scripts/notebooks-on-start.sh", {workspace_prefix = "${local.workspace_prefix}"}))
 }
 
 resource "aws_iam_role" "sagemaker_execution_role" {
