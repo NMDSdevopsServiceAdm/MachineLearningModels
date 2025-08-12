@@ -125,6 +125,16 @@
                 "ssm:DeleteParameters"
             ],
             "Resource": "arn:aws:ssm:::parameter/*"
-        }
+        },
+          {
+            "Effect": "Allow",
+            "Action": [
+              "glue:GetDatabases",
+              "glue:GetDatabase",
+              "glue:GetTables",
+              "glue:GetTable"
+            ],
+            "Resource": "*"
+          }
     ]
 }
