@@ -63,3 +63,4 @@ Pipfile.lock
 
 # ------ lambda artefacts ---- #
 lambdas/**.zip
+.idea/
