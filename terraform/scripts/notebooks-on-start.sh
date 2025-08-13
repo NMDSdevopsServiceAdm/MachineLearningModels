@@ -10,6 +10,8 @@ set -e
 
 sudo -u ec2-user -i <<'EOF'
 
+git pull
+
 conda install polars --name base --yes
 
 # Note that "base" is special environment name, include it there as well.
