@@ -26,7 +26,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Check terraform fomatting
+          name: Check terraform formatting
           command: terraform fmt -check -recursive -diff
 
   terraform-plan:
@@ -110,10 +110,3 @@ workflows:
       - terraform-plan:
           requires:
             - lint-terraform
-      - plan-approval:
-          type: approval
-          requires:
-            - terraform-plan
-      - terraform-apply:
-          requires:
-            - plan-approval
