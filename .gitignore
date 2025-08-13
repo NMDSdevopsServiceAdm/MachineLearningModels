@@ -64,3 +64,4 @@ Pipfile.lock
 # ------ lambda artefacts ---- #
 lambdas/**.zip
 .idea/
+.ipynb_checkpoints/
