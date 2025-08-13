@@ -41,16 +41,10 @@ jobs:
           command: |
             cd terraform
             terraform init -input=false
-            terraform workspace select ${CIRCLE_BRANCH} || terraform workspace new ${CIRCLE_BRANCH}
             terraform plan -out tfapply
       - store_artifacts:
           path: terraform/tfapply
-      - persist_to_workspace:
-          root: .
-          paths:
-            - terraform/tfapply
-            - terraform/.*
-            - .
+
 
   terraform-apply:
     docker:
@@ -58,8 +52,6 @@ jobs:
     resource_class: small
     steps:
       - checkout
-      - attach_workspace:
-          at: .
       - run:
           name: terraform apply
           command: |
@@ -75,11 +67,6 @@ jobs:
           command: |
             cd terraform
             echo $(terraform output --raw datasets_bucket_name) > datasets_bucket_name
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./terraform/pipeline_resources_bucket_name
-            - ./terraform/datasets_bucket_name
 
 workflows:
   version: 2
