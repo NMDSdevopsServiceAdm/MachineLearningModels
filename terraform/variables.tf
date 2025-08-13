@@ -10,12 +10,12 @@ variable "env" {
   }))
   default = {
     dev = {
-      instance_type = "ml.t3.medium"
-      volume_size   = 5
+      instance_type = "ml.m5.large"
+      volume_size   = 10
     }
     prod = {
-      instance_type = "ml.t3.medium"
-      volume_size   = 5
+      instance_type = "ml.m5.large"
+      volume_size   = 10
     }
   }
 }
