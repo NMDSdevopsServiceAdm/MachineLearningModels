@@ -31,7 +31,6 @@
                 "sagemaker:CreateModel",
                 "sagemaker:CreateEndpointConfig",
                 "sagemaker:CreateEndpoint",
-                "sagemaker:DeleteModel",
                 "sagemaker:DeleteEndpointConfig",
                 "sagemaker:DeleteEndpoint",
                 "sagemaker:CreateTrainingJob",
@@ -50,6 +49,8 @@
                 "sagemaker:DescribeHyperParameterTuningJob",
                 "sagemaker:UpdateTrainingJob",
                 "sagemaker:BatchGetMetrics",
+                "sagemaker:DescribeNotebookInstance",
+                "SageMaker:StopNotebookInstance",
                 "cloudwatch:PutMetricData",
                 "logs:CreateLogStream",
                 "logs:PutLogEvents",
@@ -79,7 +80,17 @@
                 "arn:aws:s3:::sfc-main-datasets/*",
                 "arn:aws:s3:::sfc-main-datasets/*"
             ]
-        }, 
+        },
+        {
+            "Effect": "Deny",
+            "Action": [
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::sfc-main-*"
+            ]
+        },
         {
             "Effect": "Allow",
             "Action": [
@@ -114,6 +125,16 @@
                 "ssm:DeleteParameters"
             ],
             "Resource": "arn:aws:ssm:::parameter/*"
-        }
+        },
+          {
+            "Effect": "Allow",
+            "Action": [
+              "glue:GetDatabases",
+              "glue:GetDatabase",
+              "glue:GetTables",
+              "glue:GetTable"
+            ],
+            "Resource": "*"
+          }
     ]
 }

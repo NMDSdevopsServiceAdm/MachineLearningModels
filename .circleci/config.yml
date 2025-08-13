@@ -26,7 +26,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Check terraform fomatting
+          name: Check terraform formatting
           command: terraform fmt -check -recursive -diff
 
   terraform-plan:
@@ -39,17 +39,17 @@ jobs:
       - run:
           name: terraform plan
           command: |
-            cd terraform/pipeline
+            cd terraform
             terraform init -input=false
             terraform workspace select ${CIRCLE_BRANCH} || terraform workspace new ${CIRCLE_BRANCH}
             terraform plan -out tfapply
       - store_artifacts:
-          path: terraform/pipeline/tfapply
+          path: terraform/tfapply
       - persist_to_workspace:
           root: .
           paths:
-            - terraform/pipeline/tfapply
-            - terraform/pipeline/.*
+            - terraform/tfapply
+            - terraform/.*
             - .
 
   terraform-apply:
@@ -63,23 +63,23 @@ jobs:
       - run:
           name: terraform apply
           command: |
-            cd terraform/pipeline
+            cd terraform
             terraform apply -auto-approve tfapply
       - run:
           name: save pipeline resources bucket name
           command: |
-            cd terraform/pipeline
+            cd terraform
             echo $(terraform output --raw pipeline_resources_bucket_name) > pipeline_resources_bucket_name
       - run:
           name: save datasets bucket name
           command: |
-            cd terraform/pipeline
+            cd terraform
             echo $(terraform output --raw datasets_bucket_name) > datasets_bucket_name
       - persist_to_workspace:
           root: .
           paths:
-            - ./terraform/pipeline/pipeline_resources_bucket_name
-            - ./terraform/pipeline/datasets_bucket_name
+            - ./terraform/pipeline_resources_bucket_name
+            - ./terraform/datasets_bucket_name
 
 workflows:
   version: 2
@@ -110,6 +110,3 @@ workflows:
       - terraform-plan:
           requires:
             - lint-terraform
-      - terraform-apply:
-          requires:
-            - terraform-plan
