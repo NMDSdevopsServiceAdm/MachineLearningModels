@@ -10,11 +10,11 @@ variable "env" {
   }))
   default = {
     dev = {
-      instance_type = "ml.m5.large"
+      instance_type = "ml.m5.xlarge"
       volume_size   = 10
     }
     prod = {
-      instance_type = "ml.m5.large"
+      instance_type = "ml.m5.xlarge"
       volume_size   = 10
     }
   }
