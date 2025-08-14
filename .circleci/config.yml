@@ -42,10 +42,14 @@ jobs:
             cd terraform
             terraform init -input=false
             terraform plan -out tfapply
+      - store_artifacts:
+          path: terraform/tfapply
       - persist_to_workspace:
-          root: terraform
+          root: .
           paths:
-            - tfapply
+            - terraform/tfapply
+            - terraform/.*
+            - .
 
 
   terraform-apply:
@@ -53,8 +57,8 @@ jobs:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
     resource_class: small
     steps:
-      - - attach_workspace:
-            at: terraform
+      - attach_workspace:
+          at: .
       - checkout
       - run:
           name: terraform apply
