@@ -44,6 +44,12 @@ jobs:
             terraform plan -out tfapply
       - store_artifacts:
           path: terraform/tfapply
+      - persist_to_workspace:
+          root: .
+          paths:
+            - terraform/tfapply
+            - terraform/.*
+            - .
 
 
   terraform-apply:
@@ -51,22 +57,15 @@ jobs:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
     resource_class: small
     steps:
+      - attach_workspace:
+          at: .
       - checkout
       - run:
           name: terraform apply
           command: |
             cd terraform
             terraform apply -auto-approve tfapply
-      - run:
-          name: save pipeline resources bucket name
-          command: |
-            cd terraform
-            echo $(terraform output --raw pipeline_resources_bucket_name) > pipeline_resources_bucket_name
-      - run:
-          name: save datasets bucket name
-          command: |
-            cd terraform
-            echo $(terraform output --raw datasets_bucket_name) > datasets_bucket_name
+
 
 workflows:
   version: 2
