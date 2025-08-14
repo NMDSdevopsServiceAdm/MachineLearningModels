@@ -78,7 +78,9 @@
             ],
             "Resource": [
                 "arn:aws:s3:::sfc-main-datasets/*",
-                "arn:aws:s3:::sfc-main-datasets/*"
+                "arn:aws:s3:::sfc-main-datasets/*",
+                "arn:aws:s3:::spike-polars-data/*",
+                "arn:aws:s3:::sfc-mt-sagemaker-demo"
             ]
         },
         {

@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# This script is based on approved AWS Sagemaker lifecycle configuration scripts found at
+# https://github.com/aws-samples/amazon-sagemaker-notebook-instance-lifecycle-config-samples
+
 set -e
 
 # OVERVIEW
@@ -48,9 +51,7 @@ set -ex
 IDLE_TIME=3600
 
 echo "Fetching the autostop script"
-wget https://raw.githubusercontent.com/aws-samples/amazon-sagemaker-notebook-instance-lifecycle-config-samples/master/scripts/auto-stop-idle/autostop.py
-# TODO: point to self once merging into main
-# wget https://raw.githubusercontent.com/NMDSdevopsServiceAdm/MachineLearningModels/tree/main/terraform/scripts/autostop.py
+aws s3 cp "s3:/${bucket}/scripts/python/${env}/autostop.py" .
 
 echo "Detecting Python install with boto3 install"
 

@@ -2,6 +2,11 @@ variable "region" {
   default = "eu-west-2"
 }
 
+variable "config_bucket_name" {
+  type    = string
+  default = "sfc-sagemaker-model-config"
+}
+
 variable "env" {
   description = "Map of environment configurations"
   type = map(object({
