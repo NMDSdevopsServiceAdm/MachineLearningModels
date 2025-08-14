@@ -2,16 +2,17 @@ provider "aws" {
   region = "eu-west-2"
   default_tags {
     tags = {
-      CreatedBy    = "MachineLearningModels"
-      CreatedUsing = "Terraform"
+      CreatedBy   = "MadeTech"
+      CreatedWith = "Terraform"
+      Repository  = "MachineLearningModels"
     }
   }
 }
 
 terraform {
   backend "s3" {
-    bucket         = "sfc-models-terraform-state"
-    key            = "statefiles/workspace=default/backend.tfstate"
+    bucket         = "sfc-sagemaker-model-config"
+    key            = "terraform/statefiles/machine-learning-models/backend.tfstate"
     region         = "eu-west-2"
     dynamodb_table = "models-terraform-locks"
     encrypt        = true
@@ -20,7 +21,3 @@ terraform {
 
 data "aws_caller_identity" "current" {}
 
-locals {
-  workspace_prefix           = substr(lower(replace(terraform.workspace, "/[^a-zA-Z0-9]+/", "-")), 0, 30)
-  is_development_environment = local.workspace_prefix != "main"
-}
