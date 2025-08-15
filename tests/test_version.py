@@ -1,16 +1,12 @@
-import os
-
 import pytest
 from unittest.mock import Mock, patch
 from utilities.version import ModelVersionManager, ChangeType, BaseEstimator
-from moto import mock_aws
-import boto3
 import pickle
 import io
 
 
 PATCH_STEM = 'utilities.version.ModelVersionManager'
-BUCKET = 'my-model-bucket'
+
 
 class DummyModel(BaseEstimator):
     def __init__(self, version: str, param1: int, param2: int):
@@ -21,53 +17,12 @@ class DummyModel(BaseEstimator):
     def fit(self, *args, **kwargs):
         pass
 
-@pytest.fixture
-def aws_credentials():
-    """Mocked AWS Credentials for moto."""
-    os.environ['AWS_ACCESS_KEY_ID'] = 'testing'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = 'testing'
-    os.environ['AWS_SECURITY_TOKEN'] = 'testing'
-    os.environ['AWS_SESSION_TOKEN'] = 'testing'
 
 @pytest.fixture
-def mocked_aws(aws_credentials):
-    """
-    Mock all AWS interactions
-    """
-    with mock_aws():
-        yield
-
-@pytest.fixture()
-def s3_client(mocked_aws):
-    """Mocked AWS S3 Client for moto."""
-    with mock_aws():
-        yield boto3.client('s3')
-
-
-@pytest.fixture
-def ssm_client(mocked_aws):
-    """Mocked AWS SSM Client for moto."""
-    with mock_aws():
-        yield boto3.client('ssm')
-
-
-@pytest.fixture
-def s3_bucket(s3_client):
-    """Mocked S3 Bucket for moto."""
-    s3_client.create_bucket(Bucket=BUCKET, CreateBucketConfiguration={'LocationConstraint': 'eu-west-2'})
-
-
-@pytest.fixture
-def ssm_parameter(ssm_client):
-    """Mocked SSM Parameter for moto."""
-    ssm_client.put_parameter(Name='model/test/version', Value = '{"Current Version": "5.6.7"}', Type='String')
-
-
-@pytest.fixture
-def version_manager(s3_client, s3_bucket, ssm_client, ssm_parameter):
+def version_manager(s3_client, s3_bucket, ssm_client, ssm_parameter, model_bucket):
     """A pytest fixture to provide a ModelVersionManager instance."""
     return ModelVersionManager(
-        s3_bucket=BUCKET,
+        s3_bucket=model_bucket,
         s3_prefix='model/test/version'
     )
 
@@ -130,13 +85,13 @@ def test_prompt_change_when_single_incorrect_input(mock_input, version_manager):
     assert result == ChangeType.PATCH
     assert mock_input.call_count == 2
 
-def test_save_model_writes_to_s3(version_manager, s3_client, s3_bucket, fitted_model):
+def test_save_model_writes_to_s3(version_manager, s3_client, s3_bucket, fitted_model, model_bucket):
     version_manager.save_model(fitted_model, '1.2.3')
-    response1 = version_manager.s3_client.list_objects_v2(Bucket=BUCKET)
+    response1 = version_manager.s3_client.list_objects_v2(Bucket=model_bucket)
     assert response1['KeyCount'] == 1
     assert response1['Contents'][0]['Key'] == 'model/test/version/1.2.3/model.pkl'
     download = io.BytesIO()
-    version_manager.s3_client.download_fileobj(BUCKET, 'model/test/version/1.2.3/model.pkl', download)
+    version_manager.s3_client.download_fileobj(model_bucket, 'model/test/version/1.2.3/model.pkl', download)
     download.seek(0)
     loaded_model = pickle.load(download)
     assert loaded_model.version == '1.2.3'
