@@ -13,8 +13,6 @@ set -e
 
 sudo -u ec2-user -i <<'EOF'
 
-git pull
-
 conda install polars --name base --yes
 
 # Note that "base" is special environment name, include it there as well.
@@ -51,7 +49,7 @@ set -ex
 IDLE_TIME=3600
 
 echo "Fetching the autostop script"
-aws s3 cp "s3:/${bucket}/scripts/python/${env}/autostop.py" .
+aws s3 cp "s3://${bucket}/scripts/python/${env}/autostop.py" .
 
 echo "Detecting Python install with boto3 install"
 
