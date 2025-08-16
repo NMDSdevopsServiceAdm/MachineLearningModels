@@ -15,6 +15,7 @@ pyparsing = "3.2.3"
 black = "25.1.0"
 pip-audit = "2.9.0"
 bandit = "1.8.6"
+pytest-cov = "6.2.1"
 
 [requires]
 python_version = "3.13"
