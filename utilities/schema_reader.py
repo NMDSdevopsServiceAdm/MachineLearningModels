@@ -7,27 +7,28 @@ class GlueSchemaReader:
     """
     Retrieves and parses a schema from an AWS Glue database for use with Polars.
     """
+
     GLUE_TO_POLARS_MAPPING = {
-        'tinyint': pl.Int8,
-        'smallint': pl.Int16,
-        'int': pl.Int32,
-        'integer': pl.Int32,
-        'bigint': pl.Int64,
-        'float': pl.Float32,
-        'double': pl.Float64,
-        'string': pl.Utf8,
-        'varchar': pl.Utf8,
-        'char': pl.Utf8,
-        'boolean': pl.Boolean,
-        'date': pl.Date,
-        'timestamp': pl.Datetime,
-        'decimal': pl.Decimal
+        "tinyint": pl.Int8,
+        "smallint": pl.Int16,
+        "int": pl.Int32,
+        "integer": pl.Int32,
+        "bigint": pl.Int64,
+        "float": pl.Float32,
+        "double": pl.Float64,
+        "string": pl.Utf8,
+        "varchar": pl.Utf8,
+        "char": pl.Utf8,
+        "boolean": pl.Boolean,
+        "date": pl.Date,
+        "timestamp": pl.Datetime,
+        "decimal": pl.Decimal,
         # Add more mappings as needed
     }
 
     def __init__(self):
         """Initializes the Boto3 Glue client."""
-        self.glue_client = boto3.client('glue')
+        self.glue_client = boto3.client("glue")
 
     def _get_glue_table_schema(self, database_name: str, table_name: str) -> List[Dict]:
         """
@@ -45,10 +46,9 @@ class GlueSchemaReader:
         """
         try:
             response = self.glue_client.get_table(
-                DatabaseName=database_name,
-                Name=table_name
+                DatabaseName=database_name, Name=table_name
             )
-            return response['Table']['StorageDescriptor']['Columns']
+            return response["Table"]["StorageDescriptor"]["Columns"]
         except self.glue_client.exceptions.EntityNotFoundException:
             raise ValueError(f"Glue table '{database_name}.{table_name}' not found.")
         except Exception as e:
@@ -66,11 +66,11 @@ class GlueSchemaReader:
         bracket_count = 0
         start_index = 0
         for i, char in enumerate(s):
-            if char == '<':
+            if char == "<":
                 bracket_count += 1
-            elif char == '>':
+            elif char == ">":
                 bracket_count -= 1
-            elif char == ',' and bracket_count == 0:
+            elif char == "," and bracket_count == 0:
                 parts.append(s[start_index:i].strip())
                 start_index = i + 1
         parts.append(s[start_index:].strip())
@@ -85,11 +85,11 @@ class GlueSchemaReader:
         'struct<...>' -> ('struct', 'name:string,description:string')
         'string' -> ('string', '')
         """
-        if '<' in type_str:
-            base_type, content = type_str.split('<', 1)
-            content = content.removesuffix('>')
+        if "<" in type_str:
+            base_type, content = type_str.split("<", 1)
+            content = content.removesuffix(">")
             return base_type.lower(), content
-        return type_str.lower(), ''
+        return type_str.lower(), ""
 
     def get_polars_type(self, type_str: str) -> pl.DataType:
         """
@@ -97,43 +97,44 @@ class GlueSchemaReader:
         """
         base_type, content = self.parse_type_string(type_str)
 
-        if base_type == 'array':
+        if base_type == "array":
             inner_type = self.get_polars_type(content)
             return pl.List(inner_type)
 
-        elif base_type == 'struct':
+        elif base_type == "struct":
             fields = self.split_by_top_level_comma(content)
             struct_fields = []
             for field in fields:
-                field_name, field_type = field.split(':', 1)
+                field_name, field_type = field.split(":", 1)
                 inner_type = self.get_polars_type(field_type)
                 struct_fields.append(pl.Field(field_name, inner_type))
             return pl.Struct(struct_fields)
 
-        elif base_type == 'map':
-            key_type_str, value_type_str = content.split(',', 1)
+        elif base_type == "map":
+            key_type_str, value_type_str = content.split(",", 1)
             key_type = self.get_polars_type(key_type_str)
             value_type = self.get_polars_type(value_type_str)
             # A Glue map is represented as a list of structs in Polars
-            return pl.List(pl.Struct([
-                pl.Field('key', key_type),
-                pl.Field('value', value_type)
-            ]))
+            return pl.List(
+                pl.Struct([pl.Field("key", key_type), pl.Field("value", value_type)])
+            )
 
         elif base_type in self.GLUE_TO_POLARS_MAPPING:
             return self.GLUE_TO_POLARS_MAPPING[base_type]
         else:
             raise ValueError(f"Unsupported Glue data type: '{base_type}'")
 
-    def get_polars_schema(self, database_name: str, table_name: str) -> Dict[str, pl.DataType]:
+    def get_polars_schema(
+        self, database_name: str, table_name: str
+    ) -> Dict[str, pl.DataType]:
         """
         Converts a Glue table schema into a Polars schema dictionary, handling complex types.
         """
         glue_schema = self._get_glue_table_schema(database_name, table_name)
         polars_schema = {}
         for column in glue_schema:
-            col_name = column['Name']
-            glue_type = column['Type']
+            col_name = column["Name"]
+            glue_type = column["Type"]
             polars_schema[col_name] = self.get_polars_type(glue_type)
 
         return polars_schema

@@ -12,6 +12,7 @@ class ChangeType(Enum):
     MINOR = 2
     PATCH = 3
 
+
 class ModelVersionManager:
     """
     Manages semantic versioning for machine learning models using AWS Systems Manager
@@ -34,8 +35,8 @@ class ModelVersionManager:
         """
         self.s3_bucket = s3_bucket
         self.s3_prefix = s3_prefix
-        self.ssm_client = boto3.client('ssm')
-        self.s3_client = boto3.client('s3')
+        self.ssm_client = boto3.client("ssm")
+        self.s3_client = boto3.client("s3")
         self.param_store_name = None
 
     def get_current_version(self):
@@ -49,13 +50,14 @@ class ModelVersionManager:
             ClientError: If there is an error while connecting to the AWS API
         """
         try:
-            response = self.ssm_client.get_parameter(Name=self.param_store_name, WithDecryption=False)
-            raw_value = json.loads(response['Parameter']['Value'])
+            response = self.ssm_client.get_parameter(
+                Name=self.param_store_name, WithDecryption=False
+            )
+            raw_value = json.loads(response["Parameter"]["Value"])
             return raw_value["Current Version"]
         except ClientError as e:
             print(f"Boto3 Error while retrieving parameter: {e}")
             raise e
-
 
     def update_parameter_store(self, new_version: str) -> None:
         """
@@ -65,15 +67,17 @@ class ModelVersionManager:
             new_version (str): The new version string.
         """
         try:
-            param_dict = {'Current Version': new_version}
+            param_dict = {"Current Version": new_version}
             param_str = json.dumps(param_dict)
             self.ssm_client.put_parameter(
                 Name=self.param_store_name,
                 Value=param_str,
-                Type='String',
-                Overwrite=True
+                Type="String",
+                Overwrite=True,
             )
-            print(f"Successfully updated Parameter Store with new version: {new_version}")
+            print(
+                f"Successfully updated Parameter Store with new version: {new_version}"
+            )
         except Exception as e:
             print(f"Error updating Parameter Store: {e}")
             raise e
@@ -92,7 +96,7 @@ class ModelVersionManager:
         Raises:
             ValueError: If the change type is invalid.
         """
-        parts = [int(p) for p in current_version.split('.')]
+        parts = [int(p) for p in current_version.split(".")]
         if change_type == ChangeType.MAJOR:
             parts[0] += 1
             parts[1] = 0
@@ -103,7 +107,9 @@ class ModelVersionManager:
         elif change_type == ChangeType.PATCH:
             parts[2] += 1
         else:
-            raise ValueError("Invalid change type. Must be  '1'(major), 'minor', or 'patch'.")
+            raise ValueError(
+                "Invalid change type. Must be  '1'(major), 'minor', or 'patch'."
+            )
 
         return ".".join(map(str, parts))
 
@@ -122,11 +128,12 @@ class ModelVersionManager:
             new_version = self.increment_version(current_version, change_type)
             return new_version
         except self.ssm_client.exceptions.ParameterNotFound:
-            print(f"Parameter '{self.param_store_name}' not found. Initializing to 0.1.0.")
+            print(
+                f"Parameter '{self.param_store_name}' not found. Initializing to 0.1.0."
+            )
             return "0.1.0"
         except ValueError as e:
             print(f"Error getting new version: {e}")
-
 
     def save_model(self, model: BaseEstimator, new_version: str):
         """
@@ -146,33 +153,37 @@ class ModelVersionManager:
         print(f"Saving model to s3://{self.s3_bucket}/{prefix}")
 
     def prompt_change(self, prompt_num=0) -> ChangeType | None:
-        selection = input("Is this a \n1. Major?\n2. Minor?\n3. Patch change?\n(1/2/3): ").lower()
-        if selection not in ['1', '2', '3'] and prompt_num == 0:
+        selection = input(
+            "Is this a \n1. Major?\n2. Minor?\n3. Patch change?\n(1/2/3): "
+        ).lower()
+        if selection not in ["1", "2", "3"] and prompt_num == 0:
             print("Invalid change type. Try again, choose 1, 2 or 3.")
             repeat_result = self.prompt_change(prompt_num=1)
             return repeat_result
-        elif selection not in ['1', '2', '3']:
+        elif selection not in ["1", "2", "3"]:
             print("Invalid change type. Model not saved.")
             return None
         match selection:
-            case '1':
+            case "1":
                 return ChangeType.MAJOR
-            case '2':
+            case "2":
                 return ChangeType.MINOR
-            case '3':
+            case "3":
                 return ChangeType.PATCH
             case _:
                 return None
 
-    def prompt_and_save(self, model: BaseEstimator) ->  None:
+    def prompt_and_save(self, model: BaseEstimator) -> None:
         """
         Prompts the user for a change type and handles the versioning and saving process.
 
         Args:
             model: The trained model object.
         """
-        should_save = input("Do you want to save this new model version? (only yes to save): ").lower()
-        if should_save != 'yes':
+        should_save = input(
+            "Do you want to save this new model version? (only yes to save): "
+        ).lower()
+        if should_save != "yes":
             print("Model not saved. Exiting.")
             return
 
