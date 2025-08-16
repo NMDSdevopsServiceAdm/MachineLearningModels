@@ -17,29 +17,16 @@ class ModelVersionManager:
     """
     Manages semantic versioning for machine learning models using AWS Systems Manager
     Parameter Store.
-
-    Attributes:
-        param_store_name (str): The name of the parameter in Parameter Store.
-        s3_bucket (str): The S3 bucket where models are stored.
-        s3_prefix (str): The base prefix for model files in S3.
-        ssm_client: The Boto3 client for Systems Manager.
     """
 
     def __init__(self, s3_bucket, s3_prefix):
-        """
-        Initializes the ModelVersionManager.
-
-        Args:
-            s3_bucket (str): The S3 bucket where models are stored.
-            s3_prefix (str): The base prefix for model files in S3.
-        """
         self.s3_bucket = s3_bucket
         self.s3_prefix = s3_prefix
         self.ssm_client = boto3.client("ssm")
         self.s3_client = boto3.client("s3")
         self.param_store_name = None
 
-    def get_current_version(self):
+    def get_current_version(self) -> str:
         """
         Retrieves the current model version from Parameter Store.
 
@@ -57,7 +44,7 @@ class ModelVersionManager:
             return raw_value["Current Version"]
         except ClientError as e:
             print(f"Boto3 Error while retrieving parameter: {e}")
-            raise e
+            raise
 
     def update_parameter_store(self, new_version: str) -> None:
         """
@@ -65,6 +52,9 @@ class ModelVersionManager:
 
         Args:
             new_version (str): The new version string.
+
+        Raises:
+            Exception: If there is an error while connecting to the AWS API
         """
         try:
             param_dict = {"Current Version": new_version}
@@ -80,7 +70,7 @@ class ModelVersionManager:
             )
         except Exception as e:
             print(f"Error updating Parameter Store: {e}")
-            raise e
+            raise
 
     def increment_version(self, current_version: str, change_type: ChangeType) -> str:
         """
@@ -88,7 +78,7 @@ class ModelVersionManager:
 
         Args:
             current_version (str): The current version string.
-            change_type (str): 'major', 'minor', or 'patch'.
+            change_type (ChangeType): 'MAJOR', 'MINOR', or 'PATCH'.
 
         Returns:
             str: The new version string.
@@ -153,6 +143,7 @@ class ModelVersionManager:
         print(f"Saving model to s3://{self.s3_bucket}/{prefix}")
 
     def prompt_change(self, prompt_num=0) -> ChangeType | None:
+        """Prompts user for input to give version."""
         selection = input(
             "Is this a \n1. Major?\n2. Minor?\n3. Patch change?\n(1/2/3): "
         ).lower()
@@ -178,7 +169,7 @@ class ModelVersionManager:
         Prompts the user for a change type and handles the versioning and saving process.
 
         Args:
-            model: The trained model object.
+            model (BaseEstimator): The trained model object.
         """
         should_save = input(
             "Do you want to save this new model version? (only yes to save): "

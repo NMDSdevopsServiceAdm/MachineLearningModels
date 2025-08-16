@@ -27,7 +27,6 @@ class GlueSchemaReader:
     }
 
     def __init__(self):
-        """Initializes the Boto3 Glue client."""
         self.glue_client = boto3.client("glue")
 
     def _get_glue_table_schema(self, database_name: str, table_name: str) -> List[Dict]:
@@ -42,7 +41,8 @@ class GlueSchemaReader:
             List[Dict]: A list of dictionaries, each representing a column.
 
         Raises:
-            Exception: If the Glue table cannot be found or retrieved.
+            ValueError: If the Glue table cannot be found or retrieved.
+            Exception: If an unknown error occurs.
         """
         try:
             response = self.glue_client.get_table(
@@ -79,6 +79,12 @@ class GlueSchemaReader:
     def parse_type_string(self, type_str: str) -> Tuple[str, str]:
         """
         Parses a Glue type string into a base type and its content.
+
+        Args:
+            type_str (str): The type string to parse.
+
+        Returns:
+            Tuple[str, str]: The base type and its content.
 
         Examples:
         'array<string>' -> ('array', 'string')
