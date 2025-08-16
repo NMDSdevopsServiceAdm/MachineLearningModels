@@ -96,3 +96,38 @@ def glue_table_weird(glue_client, glue_db):
             }
         }
     )
+
+@pytest.fixture
+def glue_table_complex(glue_client, glue_db):
+    """Mocked Glue Table for simple types"""
+    glue_client.create_table(
+        DatabaseName='test-db',
+        TableInput={
+            'Name': 'test-table-complex',
+            'StorageDescriptor': {
+                'Columns': [
+                    {'Name': 'user_tags', 'Type': 'array<string>'},
+                    {'Name': 'user_profile', 'Type': 'struct<name:string,age:int>'},
+                    {'Name': 'metadata', 'Type': 'map<string,bigint>'}
+                ]
+            }
+        }
+    )
+
+@pytest.fixture
+def glue_table_very_complex(glue_client, glue_db):
+    """Mocked Glue Table for simple types"""
+    glue_client.create_table(
+        DatabaseName='test-db',
+        TableInput={
+            'Name': 'test-table-very-complex',
+            'StorageDescriptor': {
+                'Columns': [
+                    {'Name': 'user_tags', 'Type': 'array<string>'},
+                    {'Name': 'user_profile', 'Type': 'struct<name:string,age:int>'},
+                    {'Name': 'metadata', 'Type': 'map<string,bigint>'},
+                    {'Name': 'crazy', 'Type': 'array<struct<name:string,code:string,contacts:array<struct<personFamilyName:string,personGivenName:string,personRoles:array<string>,personTitle:string,jobs:array<string>>>,score:int>>'}
+                ]
+            }
+        }
+    )

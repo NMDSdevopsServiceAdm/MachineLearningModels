@@ -1,6 +1,6 @@
 import polars as pl
 import boto3
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 class GlueSchemaReader:
@@ -54,29 +54,86 @@ class GlueSchemaReader:
         except Exception as e:
             raise Exception(f"Failed to retrieve schema from Glue: {e}")
 
+    def split_by_top_level_comma(self, s: str) -> List[str]:
+        """
+        Splits a string by commas, but only at the top level, respecting
+        nested angle brackets.
+
+        Example: "a,b,c" -> ["a", "b", "c"]
+        Example: "a,array<struct<x:int,y:string>>,c" -> ["a", "array<struct<x:int,y:string>>", "c"]
+        """
+        parts = []
+        bracket_count = 0
+        start_index = 0
+        for i, char in enumerate(s):
+            if char == '<':
+                bracket_count += 1
+            elif char == '>':
+                bracket_count -= 1
+            elif char == ',' and bracket_count == 0:
+                parts.append(s[start_index:i].strip())
+                start_index = i + 1
+        parts.append(s[start_index:].strip())
+        return parts
+
+    def parse_type_string(self, type_str: str) -> Tuple[str, str]:
+        """
+        Parses a Glue type string into a base type and its content.
+
+        Examples:
+        'array<string>' -> ('array', 'string')
+        'struct<...>' -> ('struct', 'name:string,description:string')
+        'string' -> ('string', '')
+        """
+        if '<' in type_str:
+            base_type, content = type_str.split('<', 1)
+            content = content.removesuffix('>')
+            return base_type.lower(), content
+        return type_str.lower(), ''
+
+    def get_polars_type(self, type_str: str) -> pl.DataType:
+        """
+        Recursively parses a complex Glue type string into a Polars DataType.
+        """
+        base_type, content = self.parse_type_string(type_str)
+
+        if base_type == 'array':
+            inner_type = self.get_polars_type(content)
+            return pl.List(inner_type)
+
+        elif base_type == 'struct':
+            fields = self.split_by_top_level_comma(content)
+            struct_fields = []
+            for field in fields:
+                field_name, field_type = field.split(':', 1)
+                inner_type = self.get_polars_type(field_type)
+                struct_fields.append(pl.Field(field_name, inner_type))
+            return pl.Struct(struct_fields)
+
+        elif base_type == 'map':
+            key_type_str, value_type_str = content.split(',', 1)
+            key_type = self.get_polars_type(key_type_str)
+            value_type = self.get_polars_type(value_type_str)
+            # A Glue map is represented as a list of structs in Polars
+            return pl.List(pl.Struct([
+                pl.Field('key', key_type),
+                pl.Field('value', value_type)
+            ]))
+
+        elif base_type in self.GLUE_TO_POLARS_MAPPING:
+            return self.GLUE_TO_POLARS_MAPPING[base_type]
+        else:
+            raise ValueError(f"Unsupported Glue data type: '{base_type}'")
+
     def get_polars_schema(self, database_name: str, table_name: str) -> Dict[str, pl.DataType]:
         """
-        Converts a Glue table schema into a Polars schema dictionary.
-
-        Args:
-            database_name (str): The name of the Glue database.
-            table_name (str): The name of the table within the database.
-
-        Returns:
-            Dict[str, pl.DataType]: A Polars schema dictionary.
-
-        Raises:
-            ValueError: If an unsupported Glue data type is encountered.
+        Converts a Glue table schema into a Polars schema dictionary, handling complex types.
         """
         glue_schema = self._get_glue_table_schema(database_name, table_name)
         polars_schema = {}
         for column in glue_schema:
             col_name = column['Name']
-            glue_type = column['Type'].lower().split('<')[0]  # Handles complex types like 'array<string>'
-
-            if glue_type not in self.GLUE_TO_POLARS_MAPPING:
-                raise ValueError(f"Unsupported Glue data type: '{glue_type}' for column '{col_name}'.")
-
-            polars_schema[col_name] = self.GLUE_TO_POLARS_MAPPING[glue_type]
+            glue_type = column['Type']
+            polars_schema[col_name] = self.get_polars_type(glue_type)
 
         return polars_schema
