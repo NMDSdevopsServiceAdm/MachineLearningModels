@@ -72,3 +72,20 @@ echo "Found boto3 at $PYTHON_DIR"
 echo "Starting the SageMaker autostop script in cron"
 
 (crontab -l 2>/dev/null; echo "*/5 * * * * $PYTHON_DIR $PWD/autostop.py --time $IDLE_TIME --ignore-connections >> /var/log/jupyter.log") | crontab -
+
+REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
+
+# Check if the directory exists
+if [ -d "$REPO_ROOT" ]; then
+    echo "export PYTHONPATH=\"$REPO_ROOT:\$PYTHONPATH\"" >> /home/ec2-user/.bashrc
+
+    source /home/ec2-user/.bashrc
+
+    echo "PYTHONPATH configured to include $REPO_ROOT"
+else
+    echo "Repository directory $REPO_ROOT not found. Skipping PYTHONPATH configuration."
+fi
+
+cd $REPO_ROOT
+git pull
+
