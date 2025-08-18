@@ -27,15 +27,15 @@ class GlueSchemaReader:
         # Add more mappings as needed
     }
 
-    def __init__(self):
+    def __init__(self, database_name: str) -> None:
         self.glue_client = boto3.client("glue")
+        self.database_name = database_name
 
-    def _get_glue_table_schema(self, database_name: str, table_name: str) -> List[Dict]:
+    def _get_glue_table_schema(self, table_name: str) -> List[Dict]:
         """
         Retrieves the column schema from an AWS Glue table.
 
         Args:
-            database_name (str): The name of the Glue database.
             table_name (str): The name of the table within the database.
 
         Returns:
@@ -47,11 +47,13 @@ class GlueSchemaReader:
         """
         try:
             response = self.glue_client.get_table(
-                DatabaseName=database_name, Name=table_name
+                DatabaseName=self.database_name, Name=table_name
             )
             return response["Table"]["StorageDescriptor"]["Columns"]
         except self.glue_client.exceptions.EntityNotFoundException:
-            raise ValueError(f"Glue table '{database_name}.{table_name}' not found.")
+            raise ValueError(
+                f"Glue table '{self.database_name}.{table_name}' not found."
+            )
         except Exception as e:
             raise Exception(f"Failed to retrieve schema from Glue: {e}")
 
@@ -131,13 +133,11 @@ class GlueSchemaReader:
         else:
             raise ValueError(f"Unsupported Glue data type: '{base_type}'")
 
-    def get_polars_schema(
-        self, database_name: str, table_name: str
-    ) -> Dict[str, DataType]:
+    def get_polars_schema(self, table_name: str) -> Dict[str, DataType]:
         """
         Converts a Glue table schema into a Polars schema dictionary, handling complex types.
         """
-        glue_schema = self._get_glue_table_schema(database_name, table_name)
+        glue_schema = self._get_glue_table_schema(table_name)
         polars_schema = {}
         for column in glue_schema:
             col_name = column["Name"]
