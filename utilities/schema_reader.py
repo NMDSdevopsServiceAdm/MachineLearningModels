@@ -1,6 +1,7 @@
 import polars as pl
 import boto3
 from typing import Dict, List, Tuple
+from polars import DataType
 
 
 class GlueSchemaReader:
@@ -8,21 +9,21 @@ class GlueSchemaReader:
     Retrieves and parses a schema from an AWS Glue database for use with Polars.
     """
 
-    GLUE_TO_POLARS_MAPPING = {
-        "tinyint": pl.Int8,
-        "smallint": pl.Int16,
-        "int": pl.Int32,
-        "integer": pl.Int32,
-        "bigint": pl.Int64,
-        "float": pl.Float32,
-        "double": pl.Float64,
-        "string": pl.Utf8,
-        "varchar": pl.Utf8,
-        "char": pl.Utf8,
-        "boolean": pl.Boolean,
-        "date": pl.Date,
-        "timestamp": pl.Datetime,
-        "decimal": pl.Decimal,
+    GLUE_TO_POLARS_MAPPING: dict[str, pl.DataType] = {
+        "tinyint": pl.Int8(),
+        "smallint": pl.Int16(),
+        "int": pl.Int32(),
+        "integer": pl.Int32(),
+        "bigint": pl.Int64(),
+        "float": pl.Float32(),
+        "double": pl.Float64(),
+        "string": pl.Utf8(),
+        "varchar": pl.Utf8(),
+        "char": pl.Utf8(),
+        "boolean": pl.Boolean(),
+        "date": pl.Date(),
+        "timestamp": pl.Datetime(),
+        "decimal": pl.Decimal(),
         # Add more mappings as needed
     }
 
@@ -97,7 +98,7 @@ class GlueSchemaReader:
             return base_type.lower(), content
         return type_str.lower(), ""
 
-    def get_polars_type(self, type_str: str) -> pl.DataType:
+    def get_polars_type(self, type_str: str) -> DataType:
         """
         Recursively parses a complex Glue type string into a Polars DataType.
         """
@@ -132,7 +133,7 @@ class GlueSchemaReader:
 
     def get_polars_schema(
         self, database_name: str, table_name: str
-    ) -> Dict[str, pl.DataType]:
+    ) -> Dict[str, DataType]:
         """
         Converts a Glue table schema into a Polars schema dictionary, handling complex types.
         """
