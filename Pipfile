@@ -17,6 +17,7 @@ pip-audit = "2.9.0"
 bandit = "1.8.6"
 pytest-cov = "6.2.1"
 pydoclint = "0.5.9"
+mypy = "1.17.1"
 
 [requires]
 python_version = "3.10"
