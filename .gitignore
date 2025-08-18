@@ -65,3 +65,5 @@ Pipfile.lock
 lambdas/**.zip
 .idea/
 .ipynb_checkpoints/
+.coverage
+
