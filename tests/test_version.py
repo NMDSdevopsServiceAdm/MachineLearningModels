@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from utilities.version import ModelVersionManager, ChangeType, BaseEstimator
+from utilities.version import ModelVersionManager, EnumChangeType, BaseEstimator
 import pickle
 import io
 
@@ -31,15 +31,15 @@ def fitted_model():
 
 
 def test_increment_major(version_manager):
-    assert version_manager.increment_version("1.2.3", ChangeType.MAJOR) == "2.0.0"
+    assert version_manager.increment_version("1.2.3", EnumChangeType.MAJOR) == "2.0.0"
 
 
 def test_increment_minor(version_manager):
-    assert version_manager.increment_version("1.2.3", ChangeType.MINOR) == "1.3.0"
+    assert version_manager.increment_version("1.2.3", EnumChangeType.MINOR) == "1.3.0"
 
 
 def test_increment_patch(version_manager):
-    assert version_manager.increment_version("1.2.3", ChangeType.PATCH) == "1.2.4"
+    assert version_manager.increment_version("1.2.3", EnumChangeType.PATCH) == "1.2.4"
 
 
 def test_invalid_change_type(version_manager):
@@ -60,7 +60,7 @@ def test_get_current_version_raises_error_if_no_parameter(version_manager, ssm_c
 
 @patch(f"{PATCH_STEM}.get_current_version", return_value="1.2.3")
 def test_get_new_version_given_existing(mock_get_current, version_manager):
-    new_version = version_manager.get_new_version(ChangeType.MINOR)
+    new_version = version_manager.get_new_version(EnumChangeType.MINOR)
     assert new_version == "1.3.0"
     mock_get_current.assert_called_once()
 
@@ -73,22 +73,22 @@ def test_get_new_version_given_no_existing(mock_get_current, version_manager):
         raise version_manager.ssm_client.exceptions.ParameterNotFound({}, "test")
 
     mock_get_current.side_effect = raise_error
-    new_version = version_manager.get_new_version(ChangeType.MINOR)
+    new_version = version_manager.get_new_version(EnumChangeType.MINOR)
     assert new_version == "0.1.0"
     mock_get_current.assert_called_once()
 
 
 @patch("builtins.input", side_effect=["4", "5"])
 def test_prompt_change_when_incorrect_inputs(mock_input, version_manager):
-    result = version_manager.prompt_change()
-    assert result is None
+    with pytest.raises(ValueError):
+        result = version_manager.prompt_change()
     assert mock_input.call_count == 2
 
 
 @patch("builtins.input", side_effect=["4", "3"])
 def test_prompt_change_when_single_incorrect_input(mock_input, version_manager):
     result = version_manager.prompt_change()
-    assert result == ChangeType.PATCH
+    assert result == EnumChangeType.PATCH
     assert mock_input.call_count == 2
 
 
@@ -125,7 +125,7 @@ def test_prompt_and_save_success(
 ):
     mock_model = Mock()
     version_manager.prompt_and_save(mock_model)
-    mock_get_new.assert_called_with(ChangeType.MINOR)
+    mock_get_new.assert_called_with(EnumChangeType.MINOR)
     mock_save.assert_called_with(mock_model, "1.3.0")
     mock_update.assert_called_with("1.3.0")
 

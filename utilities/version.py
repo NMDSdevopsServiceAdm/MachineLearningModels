@@ -5,12 +5,16 @@ from sklearn.base import BaseEstimator
 import pickle
 import io
 import json
+from typing import Literal
 
 
-class ChangeType(Enum):
+class EnumChangeType(Enum):
     MAJOR = 1
     MINOR = 2
     PATCH = 3
+
+
+ChangeType = Literal[EnumChangeType.MAJOR, EnumChangeType.MINOR, EnumChangeType.PATCH]
 
 
 class ModelVersionManager:
@@ -87,14 +91,14 @@ class ModelVersionManager:
             ValueError: If the change type is invalid.
         """
         parts = [int(p) for p in current_version.split(".")]
-        if change_type == ChangeType.MAJOR:
+        if change_type == EnumChangeType.MAJOR:
             parts[0] += 1
             parts[1] = 0
             parts[2] = 0
-        elif change_type == ChangeType.MINOR:
+        elif change_type == EnumChangeType.MINOR:
             parts[1] += 1
             parts[2] = 0
-        elif change_type == ChangeType.PATCH:
+        elif change_type == EnumChangeType.PATCH:
             parts[2] += 1
         else:
             raise ValueError(
@@ -112,6 +116,9 @@ class ModelVersionManager:
 
         Returns:
             str: The new version string.
+
+        Raises:
+            ValueError: If the change type is invalid.
         """
         try:
             current_version = self.get_current_version()
@@ -124,6 +131,7 @@ class ModelVersionManager:
             return "0.1.0"
         except ValueError as e:
             print(f"Error getting new version: {e}")
+            raise
 
     def save_model(self, model: BaseEstimator, new_version: str):
         """
@@ -142,7 +150,7 @@ class ModelVersionManager:
 
         print(f"Saving model to s3://{self.s3_bucket}/{prefix}")
 
-    def prompt_change(self, prompt_num=0) -> ChangeType | None:
+    def prompt_change(self, prompt_num=0) -> ChangeType:
         """Prompts user for input to give version."""
         selection = input(
             "Is this a \n1. Major?\n2. Minor?\n3. Patch change?\n(1/2/3): "
@@ -153,16 +161,16 @@ class ModelVersionManager:
             return repeat_result
         elif selection not in ["1", "2", "3"]:
             print("Invalid change type. Model not saved.")
-            return None
+            raise ValueError("Invalid change type.")
         match selection:
             case "1":
-                return ChangeType.MAJOR
+                return EnumChangeType.MAJOR
             case "2":
-                return ChangeType.MINOR
+                return EnumChangeType.MINOR
             case "3":
-                return ChangeType.PATCH
+                return EnumChangeType.PATCH
             case _:
-                return None
+                raise ValueError("Invalid change type.")
 
     def prompt_and_save(self, model: BaseEstimator) -> None:
         """
