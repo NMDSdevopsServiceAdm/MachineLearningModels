@@ -21,7 +21,11 @@ class DummyModel(BaseEstimator):
 @pytest.fixture
 def version_manager(s3_client, s3_bucket, ssm_client, ssm_parameter, model_bucket):
     """A pytest fixture to provide a ModelVersionManager instance."""
-    return ModelVersionManager(s3_bucket=model_bucket, s3_prefix="model/test/version")
+    return ModelVersionManager(
+        s3_bucket=model_bucket,
+        s3_prefix="model/test/version",
+        param_store_name="model/test/version",
+    )
 
 
 @pytest.fixture
@@ -48,7 +52,6 @@ def test_invalid_change_type(version_manager):
 
 
 def test_get_current_version_gets_data_from_ssm(version_manager, ssm_client):
-    version_manager.param_store_name = "model/test/version"
     assert version_manager.get_current_version() == "5.6.7"
 
 
@@ -111,7 +114,6 @@ def test_save_model_writes_to_s3(
 
 
 def test_update_parameter_store(version_manager, ssm_client, ssm_parameter):
-    version_manager.param_store_name = "model/test/version"
     version_manager.update_parameter_store("7.8.9")
     assert version_manager.get_current_version() == "7.8.9"
 
