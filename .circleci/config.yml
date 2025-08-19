@@ -126,11 +126,13 @@ workflows:
   plan-approve-and-deploy-to-main:
     unless: << pipeline.parameters.GHA_Action >>
     jobs:
-      - run-checks
       - lint-terraform:
           filters:
             branches:
               only: main
+      - run-checks:
+          requires:
+            - lint-terraform
       - terraform-plan:
           requires:
             - lint-terraform
@@ -142,21 +144,17 @@ workflows:
       - terraform-apply:
           requires:
             - plan-approval
-    filters:
-      branches:
-        only: main
   plan-and-deploy-to-dev:
     unless: << pipeline.parameters.GHA_Action >>
     jobs:
-      - run-checks
       - lint-terraform:
           filters:
             branches:
               ignore: main
+      - run-checks:
+          requires:
+            - lint-terraform
       - terraform-plan:
           requires:
             - lint-terraform
             - run-checks
-    filters:
-      branches:
-        ignore: main
