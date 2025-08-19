@@ -27,7 +27,7 @@ jobs:
     steps:
       - checkout
 
-      - restore-cache:
+      - restore_cache:
           keys:
             - v1.1-deps-{{ checksum "Pipfile.lock" }}
 
