@@ -21,7 +21,7 @@ orbs:
 jobs:
   run-checks:
     docker:
-      - image: circleci/python:3.10.18
+      - image: cimg/python:3.10.18
     resource_class: small
 
     steps:
