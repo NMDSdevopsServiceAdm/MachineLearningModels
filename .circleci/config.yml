@@ -50,7 +50,7 @@ jobs:
       - run:
           name: Type checks
           command: |
-             run mypy --follow-untyped-imports utilities
+             pipenv run mypy --follow-untyped-imports utilities
 
       - run:
           name: Python linting
