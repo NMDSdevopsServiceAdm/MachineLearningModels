@@ -60,8 +60,7 @@ def ssm_parameter(ssm_client):
 @pytest.fixture
 def glue_client(mocked_aws):
     """Mocked AWS Glue Client for moto."""
-    with mock_aws():
-        yield boto3.client("glue")
+    yield boto3.client("glue")
 
 
 @pytest.fixture
