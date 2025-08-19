@@ -26,8 +26,7 @@ def mocked_aws(aws_credentials):
 @pytest.fixture
 def s3_client(mocked_aws):
     """Mocked AWS S3 Client for moto."""
-    with mock_aws():
-        yield boto3.client("s3")
+    yield boto3.client("s3")
 
 
 @pytest.fixture
@@ -38,8 +37,7 @@ def model_bucket():
 @pytest.fixture
 def ssm_client(mocked_aws):
     """Mocked AWS SSM Client for moto."""
-    with mock_aws():
-        yield boto3.client("ssm")
+    yield boto3.client("ssm")
 
 
 @pytest.fixture
