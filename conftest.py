@@ -4,13 +4,14 @@ from moto import mock_aws
 import boto3
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="session", autouse=True)
 def aws_credentials():
     """Mocked AWS Credentials for moto."""
     os.environ["AWS_ACCESS_KEY_ID"] = "testing"
     os.environ["AWS_SECRET_ACCESS_KEY"] = "testing"
     os.environ["AWS_SECURITY_TOKEN"] = "testing"
     os.environ["AWS_SESSION_TOKEN"] = "testing"
+    os.environ["AWS_REGION"] = "eu-west-2"
 
 
 @pytest.fixture
@@ -25,8 +26,7 @@ def mocked_aws(aws_credentials):
 @pytest.fixture
 def s3_client(mocked_aws):
     """Mocked AWS S3 Client for moto."""
-    with mock_aws():
-        yield boto3.client("s3")
+    yield boto3.client("s3", region_name="eu-west-2")
 
 
 @pytest.fixture
@@ -37,8 +37,7 @@ def model_bucket():
 @pytest.fixture
 def ssm_client(mocked_aws):
     """Mocked AWS SSM Client for moto."""
-    with mock_aws():
-        yield boto3.client("ssm")
+    yield boto3.client("ssm", region_name="eu-west-2")
 
 
 @pytest.fixture
@@ -61,8 +60,7 @@ def ssm_parameter(ssm_client):
 @pytest.fixture
 def glue_client(mocked_aws):
     """Mocked AWS Glue Client for moto."""
-    with mock_aws():
-        yield boto3.client("glue")
+    yield boto3.client("glue", region_name="eu-west-2")
 
 
 @pytest.fixture

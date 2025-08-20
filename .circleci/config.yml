@@ -22,6 +22,60 @@ orbs:
   aws-cli: circleci/aws-cli@5.4.1
 
 jobs:
+  run-checks:
+    docker:
+      - image: cimg/python:3.10.18
+    resource_class: small
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          keys:
+            - v1.1-deps-{{ checksum "Pipfile.lock" }}
+
+      - run:
+          name: Install pipenv and dependencies
+          command: |
+            pip install pipenv
+            pipenv install --dev
+
+      - save_cache:
+          key: v1.1-deps-{{ checksum "Pipfile.lock" }}
+          paths:
+            - ~/.local/share/virtualenvs
+
+      - run:
+          name: Unit tests
+          command: |
+            pipenv run pytest -vrrP --cov
+
+      - run:
+          name: Type checks
+          command: |
+             pipenv run mypy --follow-untyped-imports utilities
+
+      - run:
+          name: Python linting
+          command: |
+             pipenv run black . --check
+
+      - run:
+          name: Docstring linting
+          command: |
+            pipenv run pydoclint --style=google --quiet .
+
+      - run:
+          name: Dependency audit
+          command: |
+            pipenv run pip-audit 
+
+      - run:
+          name: Security check
+          command: |
+            pipenv run bandit -c bandit.yaml -r utilities
+            
+
   lint-terraform:
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
@@ -79,10 +133,14 @@ workflows:
           filters:
             branches:
               only: main
+      - run-checks:
+          requires:
+            - lint-terraform
       - terraform-plan:
           build_file: "build_vars_prod.tfvars"
           requires:
             - lint-terraform
+            - run-checks
       - plan-approval:
           type: approval
           requires:
@@ -97,7 +155,11 @@ workflows:
           filters:
             branches:
               ignore: main
+      - run-checks:
+          requires:
+            - lint-terraform
       - terraform-plan:
           build_file: "build_vars_dev.tfvars"
           requires:
             - lint-terraform
+            - run-checks

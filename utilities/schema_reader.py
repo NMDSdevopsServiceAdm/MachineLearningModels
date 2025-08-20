@@ -2,6 +2,9 @@ import polars as pl
 import boto3
 from typing import Dict, List, Tuple
 from polars import DataType
+import os
+
+REGION = os.environ.get("AWS_REGION", "eu-west-2")
 
 
 class GlueSchemaReader:
@@ -28,7 +31,7 @@ class GlueSchemaReader:
     }
 
     def __init__(self, database_name: str) -> None:
-        self.glue_client = boto3.client("glue")
+        self.glue_client = boto3.client("glue", region_name=REGION)
         self.database_name = database_name
 
     def _get_glue_table_schema(self, table_name: str) -> List[Dict]:
