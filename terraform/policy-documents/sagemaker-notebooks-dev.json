@@ -35,7 +35,7 @@
                 "secretsmanager:ListSecretVersionIds"
             ],
             "Resource": [
-                "arn:aws:secretsmanager:::secret:*"
+              "arn:aws:secretsmanager:eu-west-2:344210435447:secret:*"
             ]
         },
         {
@@ -49,7 +49,7 @@
                 "ssm:GetParameter",
                 "ssm:DeleteParameters"
             ],
-            "Resource": "arn:aws:ssm:::parameter/*"
+            "Resource": "arn:aws:ssm:eu-west-2:344210435447:parameter/*"
         },
           {
             "Effect": "Allow",
