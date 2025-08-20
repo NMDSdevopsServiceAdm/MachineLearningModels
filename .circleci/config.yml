@@ -21,20 +21,20 @@ orbs:
 jobs:
   run-checks:
     docker:
-      - image: circleci/python:3.9.6
+      - image: cimg/python:3.10.18
     resource_class: small
 
     steps:
       - checkout
 
-      - restore-cache:
+      - restore_cache:
           keys:
             - v1.1-deps-{{ checksum "Pipfile.lock" }}
 
       - run:
           name: Install pipenv and dependencies
           command: |
-            sudo pip install pipenv
+            pip install pipenv
             pipenv install --dev
 
       - save_cache:
@@ -50,7 +50,7 @@ jobs:
       - run:
           name: Type checks
           command: |
-             run mypy --follow-untyped-imports utilities
+             pipenv run mypy --follow-untyped-imports utilities
 
       - run:
           name: Python linting
@@ -126,11 +126,13 @@ workflows:
   plan-approve-and-deploy-to-main:
     unless: << pipeline.parameters.GHA_Action >>
     jobs:
-      - run-checks
       - lint-terraform:
           filters:
             branches:
               only: main
+      - run-checks:
+          requires:
+            - lint-terraform
       - terraform-plan:
           requires:
             - lint-terraform
@@ -145,11 +147,13 @@ workflows:
   plan-and-deploy-to-dev:
     unless: << pipeline.parameters.GHA_Action >>
     jobs:
-      - run-checks
       - lint-terraform:
           filters:
             branches:
               ignore: main
+      - run-checks:
+          requires:
+            - lint-terraform
       - terraform-plan:
           requires:
             - lint-terraform

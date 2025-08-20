@@ -6,6 +6,10 @@ import pickle
 import io
 import json
 from typing import Literal
+import os
+
+
+REGION = os.environ.get("AWS_REGION", "eu-west-2")
 
 
 class EnumChangeType(Enum):
@@ -26,8 +30,8 @@ class ModelVersionManager:
     def __init__(self, s3_bucket, s3_prefix, param_store_name):
         self.s3_bucket = s3_bucket
         self.s3_prefix = s3_prefix
-        self.ssm_client = boto3.client("ssm")
-        self.s3_client = boto3.client("s3")
+        self.ssm_client = boto3.client("ssm", region_name=REGION)
+        self.s3_client = boto3.client("s3", region_name=REGION)
         self.param_store_name = param_store_name
 
     def get_current_version(self) -> str:

@@ -19,7 +19,9 @@ class DummyModel(BaseEstimator):
 
 
 @pytest.fixture
-def version_manager(s3_client, s3_bucket, ssm_client, ssm_parameter, model_bucket):
+def version_manager(
+    mocked_aws, s3_client, s3_bucket, ssm_client, ssm_parameter, model_bucket
+):
     """A pytest fixture to provide a ModelVersionManager instance."""
     return ModelVersionManager(
         s3_bucket=model_bucket,
@@ -34,42 +36,48 @@ def fitted_model():
     return DummyModel(version="1.2.3", param1=17, param2=26)
 
 
-def test_increment_major(version_manager):
+def test_increment_major(mocked_aws, version_manager):
     assert version_manager.increment_version("1.2.3", EnumChangeType.MAJOR) == "2.0.0"
 
 
-def test_increment_minor(version_manager):
+def test_increment_minor(mocked_aws, version_manager):
     assert version_manager.increment_version("1.2.3", EnumChangeType.MINOR) == "1.3.0"
 
 
-def test_increment_patch(version_manager):
+def test_increment_patch(mocked_aws, version_manager):
     assert version_manager.increment_version("1.2.3", EnumChangeType.PATCH) == "1.2.4"
 
 
-def test_invalid_change_type(version_manager):
+def test_invalid_change_type(mocked_aws, version_manager):
     with pytest.raises(ValueError):
         version_manager.increment_version("1.0.0", 4)
 
 
-def test_get_current_version_gets_data_from_ssm(version_manager, ssm_client):
+def test_get_current_version_gets_data_from_ssm(
+    mocked_aws, version_manager, ssm_client
+):
     assert version_manager.get_current_version() == "5.6.7"
 
 
-def test_get_current_version_raises_error_if_no_parameter(version_manager, ssm_client):
+def test_get_current_version_raises_error_if_no_parameter(
+    mocked_aws, version_manager, ssm_client
+):
     version_manager.param_store_name = "model/new/version"
     with pytest.raises(version_manager.ssm_client.exceptions.ParameterNotFound):
         version_manager.get_current_version()
 
 
 @patch(f"{PATCH_STEM}.get_current_version", return_value="1.2.3")
-def test_get_new_version_given_existing(mock_get_current, version_manager):
+def test_get_new_version_given_existing(mock_get_current, mocked_aws, version_manager):
     new_version = version_manager.get_new_version(EnumChangeType.MINOR)
     assert new_version == "1.3.0"
     mock_get_current.assert_called_once()
 
 
 @patch(f"{PATCH_STEM}.get_current_version")
-def test_get_new_version_given_no_existing(mock_get_current, version_manager):
+def test_get_new_version_given_no_existing(
+    mock_get_current, mocked_aws, version_manager
+):
     version_manager.param_store_name = "model/new/version"
 
     def raise_error():
@@ -82,21 +90,23 @@ def test_get_new_version_given_no_existing(mock_get_current, version_manager):
 
 
 @patch("builtins.input", side_effect=["4", "5"])
-def test_prompt_change_when_incorrect_inputs(mock_input, version_manager):
+def test_prompt_change_when_incorrect_inputs(mock_input, mocked_aws, version_manager):
     with pytest.raises(ValueError):
         result = version_manager.prompt_change()
     assert mock_input.call_count == 2
 
 
 @patch("builtins.input", side_effect=["4", "3"])
-def test_prompt_change_when_single_incorrect_input(mock_input, version_manager):
+def test_prompt_change_when_single_incorrect_input(
+    mock_input, mocked_aws, version_manager
+):
     result = version_manager.prompt_change()
     assert result == EnumChangeType.PATCH
     assert mock_input.call_count == 2
 
 
 def test_save_model_writes_to_s3(
-    version_manager, s3_client, s3_bucket, fitted_model, model_bucket
+    mocked_aws, version_manager, s3_client, s3_bucket, fitted_model, model_bucket
 ):
     version_manager.save_model(fitted_model, "1.2.3")
     response1 = version_manager.s3_client.list_objects_v2(Bucket=model_bucket)
@@ -113,7 +123,7 @@ def test_save_model_writes_to_s3(
     assert loaded_model.param2 == 26
 
 
-def test_update_parameter_store(version_manager, ssm_client, ssm_parameter):
+def test_update_parameter_store(mocked_aws, version_manager, ssm_client, ssm_parameter):
     version_manager.update_parameter_store("7.8.9")
     assert version_manager.get_current_version() == "7.8.9"
 
@@ -123,7 +133,7 @@ def test_update_parameter_store(version_manager, ssm_client, ssm_parameter):
 @patch(f"{PATCH_STEM}.save_model")
 @patch(f"{PATCH_STEM}.update_parameter_store")
 def test_prompt_and_save_success(
-    mock_update, mock_save, mock_get_new, mock_input, version_manager
+    mock_update, mock_save, mock_get_new, mock_input, mocked_aws, version_manager
 ):
     mock_model = Mock()
     version_manager.prompt_and_save(mock_model)
@@ -134,7 +144,7 @@ def test_prompt_and_save_success(
 
 @patch("builtins.input", side_effect=["no"])
 @patch(f"{PATCH_STEM}.get_new_version")
-def test_prompt_and_save_no_save(mock_get_new, mock_input, version_manager):
+def test_prompt_and_save_no_save(mock_get_new, mock_input, mocked_aws, version_manager):
     mock_model = Mock()
     version_manager.prompt_and_save(mock_model)
     mock_get_new.assert_not_called()
