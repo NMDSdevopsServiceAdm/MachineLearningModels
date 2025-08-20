@@ -13,9 +13,6 @@ parameters:
   GHA_Meta:
     type: string
     default: ""
-  build_file:
-    type: string
-    default: "build_vars_dev.tfvars"
 
 orbs:
   aws-s3: circleci/aws-s3@3.0
@@ -87,6 +84,10 @@ jobs:
           command: terraform fmt -check -recursive -diff
 
   terraform-plan:
+    parameters:
+      build_file:
+        type: string
+        default: "build_vars_dev.tfvars"
     working_directory: /tmp/project
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
