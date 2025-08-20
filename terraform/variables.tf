@@ -8,6 +8,12 @@ variable "config_bucket_name" {
 }
 
 variable "env" {
+  type        = set(string)
+  default     = ["dev"]
+  description = "The required environments for deployment"
+}
+
+variable "env_config" {
   description = "Map of environment configurations"
   type = map(object({
     instance_type = string
