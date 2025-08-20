@@ -128,7 +128,6 @@ workflows:
   version: 2
   plan-approve-and-deploy-to-main:
     unless: << pipeline.parameters.GHA_Action >>
-    build_file: "build_vars_prod.tfvars"
     jobs:
       - lint-terraform:
           filters:
@@ -138,6 +137,7 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
+          build_file: "build_vars_prod.tfvars"
           requires:
             - lint-terraform
             - run-checks
@@ -150,7 +150,6 @@ workflows:
             - plan-approval
   plan-and-deploy-to-dev:
     unless: << pipeline.parameters.GHA_Action >>
-    build_file: "build_vars_dev.tfvars"
     jobs:
       - lint-terraform:
           filters:
@@ -160,6 +159,7 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
+          build_file: "build_vars_dev.tfvars"
           requires:
             - lint-terraform
             - run-checks
