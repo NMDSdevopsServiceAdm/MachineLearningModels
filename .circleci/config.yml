@@ -13,6 +13,9 @@ parameters:
   GHA_Meta:
     type: string
     default: ""
+  build_file:
+    type: string
+    default: "build_vars_dev.tfvars"
 
 orbs:
   aws-s3: circleci/aws-s3@3.0
@@ -41,7 +44,7 @@ jobs:
           command: |
             cd terraform
             terraform init -input=false
-            terraform plan -out tfapply
+            terraform plan -var-file=<< parameters.build_file >> -out tfapply
       - store_artifacts:
           path: terraform/tfapply
       - persist_to_workspace:
@@ -77,6 +80,7 @@ workflows:
             branches:
               only: main
       - terraform-plan:
+          build_file: "build_vars_prod.tfvars"
           requires:
             - lint-terraform
       - plan-approval:
