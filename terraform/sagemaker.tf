@@ -25,6 +25,7 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "models_lifec
   name     = "${each.key}-models-lifecycle"
   on_start = base64encode(templatefile("${path.module}/scripts/notebooks-on-start.sh.tpl", { env = each.key,
   bucket = var.config_bucket_name }))
+  on_create = base64encode(templatefile("${path.module}/scripts/notebook-instance-on-create.sh.tpl", { env = each.key }))
 
   depends_on = [aws_s3_object.autostop_script]
 }
