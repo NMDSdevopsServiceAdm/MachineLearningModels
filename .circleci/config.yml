@@ -98,5 +98,6 @@ workflows:
             branches:
               ignore: main
       - terraform-plan:
+          build_file: "build_vars_dev.tfvars"
           requires:
             - lint-terraform
