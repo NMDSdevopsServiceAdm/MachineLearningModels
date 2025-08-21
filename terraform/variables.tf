@@ -21,11 +21,11 @@ variable "env_config" {
   }))
   default = {
     dev = {
-      instance_type = "ml.m5.xlarge"
+      instance_type = "ml.m5.2xlarge"
       volume_size   = 10
     }
     prod = {
-      instance_type = "ml.m5.xlarge"
+      instance_type = "ml.m5.2xlarge"
       volume_size   = 10
     }
   }
