@@ -155,7 +155,31 @@ workflows:
       - lint-terraform:
           filters:
             branches:
-              ignore: main
+              only: dev
+      - run-checks:
+          requires:
+            - lint-terraform
+      - terraform-plan:
+          build_file: "build_vars_dev.tfvars"
+          requires:
+            - lint-terraform
+            - run-checks
+      - plan-approval:
+          type: approval
+          requires:
+            - terraform-plan
+      - terraform-apply:
+          requires:
+            - plan-approval
+  plan-and-commit-to-branch:
+    unless: << pipeline.parameters.GHA_Action >>
+    jobs:
+      - lint-terraform:
+          filters:
+            branches:
+              ignore:
+                - main
+                - dev
       - run-checks:
           requires:
             - lint-terraform
