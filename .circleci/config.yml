@@ -84,6 +84,10 @@ jobs:
           command: terraform fmt -check -recursive -diff
 
   terraform-plan:
+    parameters:
+      build_file:
+        type: string
+        default: "build_vars_dev.tfvars"
     working_directory: /tmp/project
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
@@ -95,7 +99,7 @@ jobs:
           command: |
             cd terraform
             terraform init -input=false
-            terraform plan -out tfapply
+            terraform plan -var-file=<< parameters.build_file >> -out tfapply
       - store_artifacts:
           path: terraform/tfapply
       - persist_to_workspace:
@@ -134,6 +138,7 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
+          build_file: "build_vars_prod.tfvars"
           requires:
             - lint-terraform
             - run-checks
@@ -155,6 +160,7 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
+          build_file: "build_vars_dev.tfvars"
           requires:
             - lint-terraform
             - run-checks
