@@ -86,6 +86,4 @@ else
     echo "Repository directory $REPO_ROOT not found. Skipping PYTHONPATH configuration."
 fi
 
-cd $REPO_ROOT
-git pull
 
