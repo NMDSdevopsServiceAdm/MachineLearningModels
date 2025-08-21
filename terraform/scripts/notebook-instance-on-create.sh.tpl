@@ -16,11 +16,11 @@ aws secretsmanager get-secret-value \
     --query SecretString \
     --output text > $FILENAME
 
-mv $FILENAME "${SSH_DIR}"
+mv $FILENAME "$SSH_DIR"
 
-chmod 600 "${SSH_DIR}/${FILENAME}"
+chmod 600 "$SSH_DIR/$FILENAME"
 
 echo "Adding SSH Private Key..."
 eval "$(ssh-agent -s)"
 
-ssh-add "${SSH_DIR}/${FILENAME}"
+ssh-add "$SSH_DIR/$FILENAME"
