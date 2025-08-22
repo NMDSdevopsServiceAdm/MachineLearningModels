@@ -36,9 +36,3 @@ chmod 600 "$SSH_DIR/config"
 ssh-keyscan -H github.com >> "$SSH_DIR/known_hosts"
 chmod 644 "$SSH_DIR/known_hosts"
 
-echo "Correcting Git remote URL..."
-REPO_DIR="/home/ec2-user/SageMaker/MachineLearningModels"
-
-cd "$REPO_DIR"
-
-git remote set-url origin git@github.com:sagemaker/<your_repo_name>.git
