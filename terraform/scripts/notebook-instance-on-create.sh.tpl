@@ -2,9 +2,9 @@
 
 set -e
 
-SECRET_NAME="sagemaker/dev/deploy"
+SECRET_NAME="sagemaker/${env}/deploy"
 REGION="eu-west-2"
-FILENAME="dev_private_key"
+FILENAME="${env}_private_key"
 SSH_DIR="/home/ec2-user/.ssh"
 
 cd /home/ec2-user
@@ -24,3 +24,21 @@ echo "Adding SSH Private Key..."
 eval "$(ssh-agent -s)"
 
 ssh-add "$SSH_DIR/$FILENAME"
+
+echo "Configuring SSH for GitHub..."
+echo "Host github.com" >> "$SSH_DIR/config"
+echo "  HostName github.com" >> "$SSH_DIR/config"
+echo "  IdentityFile $SSH_DIR/$FILENAME" >> "$SSH_DIR/config"
+echo "  User git" >> "$SSH_DIR/config"
+
+chmod 600 "$SSH_DIR/config"
+
+ssh-keyscan -H github.com >> "$SSH_DIR/known_hosts"
+chmod 644 "$SSH_DIR/known_hosts"
+
+echo "Correcting Git remote URL..."
+REPO_DIR="/home/ec2-user/SageMaker/MachineLearningModels"
+
+cd "$REPO_DIR"
+
+git remote set-url origin git@github.com:sagemaker/<your_repo_name>.git
