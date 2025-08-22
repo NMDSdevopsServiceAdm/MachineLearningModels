@@ -27,7 +27,7 @@ resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "models_lifec
   bucket = var.config_bucket_name }))
   on_create = base64encode(templatefile("${path.module}/scripts/notebook-instance-on-create.sh.tpl", { env = each.value }))
 
-  depends_on = [aws_s3_object.autostop_script, aws_sagemaker_code_repository.models_repo]
+  depends_on = [aws_s3_object.autostop_script]
 }
 
 resource "aws_s3_object" "autostop_script" {
