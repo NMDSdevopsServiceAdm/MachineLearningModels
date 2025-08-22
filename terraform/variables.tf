@@ -34,6 +34,6 @@ variable "env_config" {
 variable "github_repository_url" {
   description = "URL of the GitHub repository containing the machine learning notebooks"
   type        = string
-  default     = "https://github.com/NMDSdevopsServiceAdm/MachineLearningModels.git"
+  default     = "git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git"
 }
 

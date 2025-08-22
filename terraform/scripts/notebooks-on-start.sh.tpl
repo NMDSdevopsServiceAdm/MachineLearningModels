@@ -86,10 +86,5 @@ else
     echo "Repository directory $REPO_ROOT not found. Skipping PYTHONPATH configuration."
 fi
 
-echo "Correcting Git remote URL..."
-
-cd "$REPO_ROOT"
-
-git remote set-url origin git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git
 
 
