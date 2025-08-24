@@ -9,8 +9,8 @@ PATCH_STEM = "utilities.version.ModelVersionManager"
 
 
 class DummyModel(BaseEstimator):
-    def __init__(self, version: str, param1: int, param2: int):
-        self.version = version
+    def __init__(self, name: str, param1: int, param2: int):
+        self.name = name
         self.param1 = param1
         self.param2 = param2
 
@@ -19,9 +19,7 @@ class DummyModel(BaseEstimator):
 
 
 @pytest.fixture
-def version_manager(
-    mocked_aws, s3_client, s3_bucket, ssm_client, ssm_parameter, model_bucket
-):
+def version_manager(mocked_aws, s3_client, s3_bucket, ssm_client, model_bucket):
     """A pytest fixture to provide a ModelVersionManager instance."""
     return ModelVersionManager(
         s3_bucket=model_bucket,
@@ -33,7 +31,7 @@ def version_manager(
 @pytest.fixture
 def fitted_model():
     """A dummy model instance with parameters set."""
-    return DummyModel(version="1.2.3", param1=17, param2=26)
+    return DummyModel(name="clever_model", param1=17, param2=26)
 
 
 def test_increment_major(mocked_aws, version_manager):
@@ -54,7 +52,7 @@ def test_invalid_change_type(mocked_aws, version_manager):
 
 
 def test_get_current_version_gets_data_from_ssm(
-    mocked_aws, version_manager, ssm_client
+    mocked_aws, version_manager, ssm_client, ssm_parameter
 ):
     assert version_manager.get_current_version() == "5.6.7"
 
@@ -118,7 +116,7 @@ def test_save_model_writes_to_s3(
     )
     download.seek(0)
     loaded_model = pickle.load(download)
-    assert loaded_model.version == "1.2.3"
+    assert loaded_model.name == "clever_model"
     assert loaded_model.param1 == 17
     assert loaded_model.param2 == 26
 
@@ -148,3 +146,18 @@ def test_prompt_and_save_no_save(mock_get_new, mock_input, mocked_aws, version_m
     mock_model = Mock()
     version_manager.prompt_and_save(mock_model)
     mock_get_new.assert_not_called()
+
+
+@patch("builtins.input", side_effect=["yes", "2"])
+def test_puts_new_version_if_none_available(
+    mock_input, fitted_model, s3_bucket, s3_client, ssm_client, version_manager
+):
+    response1 = version_manager.ssm_client.describe_parameters()
+    names1 = [p["Name"] for p in response1["Parameters"]]
+    assert len(names1) == 0
+    version_manager.prompt_and_save(fitted_model)
+    assert version_manager.get_current_version() == "0.1.0"
+    response2 = version_manager.ssm_client.describe_parameters()
+    names2 = [p["Name"] for p in response2["Parameters"]]
+    assert "model/test/version" in names2
+    assert len(names2) == 1
