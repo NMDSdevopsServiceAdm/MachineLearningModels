@@ -75,6 +75,7 @@ echo "Starting the SageMaker autostop script in cron"
 
 REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
 
+# Setting environment variables
 VAR1=PYTHONPATH
 VAR2=ENV
 
@@ -87,12 +88,23 @@ TAG2=$(aws sagemaker list-tags --resource-arn $INSTANCE_ARN | jq -r --arg VAR2 "
 echo "export $VAR1=$TAG1" >> /etc/profile.d/jupyter-env.sh
 echo "export $VAR2=$TAG2" >> /etc/profile.d/jupyter-env.sh
 
-cat >> /home/ec2-user/.jupyter/jupyter_server_config.py << EOF
-c.KernelManager.env = {
-  "$VAR1": "$TAG1",
-  "$VAR2": "$TAG2"
-}
+ENV1="/home/ec2-user/anaconda3/envs/python3/etc/conda/activate.d/env_vars.sh"
+ENV2="/home/ec2-user/anaconda3/etc/conda/activate.d/env_vars.sh"
+
+# Setting in both the base and python3 conda environments
+cat > $ENV1 << EOF
+#!/bin/bash
+export $VAR1=$TAG1
+export $VAR2=$TAG2
 EOF
+chmod +x $ENV1
+
+cat > $ENV2 << EOF
+#!/bin/bash
+export $VAR1=$TAG1
+export $VAR2=$TAG2
+EOF
+chmod +x $ENV2
 
 
 
