@@ -87,5 +87,12 @@ TAG2=$(aws sagemaker list-tags --resource-arn $INSTANCE_ARN | jq -r --arg VAR2 "
 echo "export $VAR1=$TAG1" >> /etc/profile.d/jupyter-env.sh
 echo "export $VAR2=$TAG2" >> /etc/profile.d/jupyter-env.sh
 
+cat >> /home/ec2-user/.jupyter/jupyter_server_config.py << EOF
+c.KernelManager.env = {
+  "$VAR1": "$TAG1",
+  "$VAR2": "$TAG2"
+}
+EOF
+
 
 
