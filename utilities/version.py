@@ -128,7 +128,7 @@ class ModelVersionManager:
             current_version = self.get_current_version()
             new_version = self.increment_version(current_version, change_type)
             return new_version
-        except self.ssm_client.exceptions.ParameterNotFound:
+        except (self.ssm_client.exceptions.ParameterNotFound, ClientError):
             print(
                 f"Parameter '{self.param_store_name}' not found. Initializing to 0.1.0."
             )
