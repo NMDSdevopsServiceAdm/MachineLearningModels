@@ -81,8 +81,8 @@ VAR2=ENV
 INSTANCE_ARN=$(jq '.ResourceArn' /opt/ml/metadata/resource-metadata.json --raw-output)
 touch /etc/profile.d/jupyter-env.sh
 
-TAG1=$(aws sagemaker list-tags --resource-arn $NOTEBOOK_ARN | jq -r --arg VAR1 "$VAR1" .'Tags[] | select(.Key == $VAR1).Value' --raw-output)
-TAG2=$(aws sagemaker list-tags --resource-arn $NOTEBOOK_ARN | jq -r --arg VAR2 "$VAR2" .'Tags[] | select(.Key == $VAR2).Value' --raw-output)
+TAG1=$(aws sagemaker list-tags --resource-arn $INSTANCE_ARN | jq -r --arg VAR1 "$VAR1" .'Tags[] | select(.Key == $VAR1).Value' --raw-output)
+TAG2=$(aws sagemaker list-tags --resource-arn $INSTANCE_ARN | jq -r --arg VAR2 "$VAR2" .'Tags[] | select(.Key == $VAR2).Value' --raw-output)
 
 echo "export $VAR1=$TAG1" >> /etc/profile.d/jupyter-env.sh
 echo "export $VAR2=$TAG2" >> /etc/profile.d/jupyter-env.sh
