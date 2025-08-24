@@ -24,7 +24,7 @@ def version_manager(mocked_aws, s3_client, s3_bucket, ssm_client, model_bucket):
     return ModelVersionManager(
         s3_bucket=model_bucket,
         s3_prefix="model/test/version",
-        param_store_name="model/test/version",
+        param_store_name="/model/test/version",
     )
 
 
@@ -159,5 +159,16 @@ def test_puts_new_version_if_none_available(
     assert version_manager.get_current_version() == "0.1.0"
     response2 = version_manager.ssm_client.describe_parameters()
     names2 = [p["Name"] for p in response2["Parameters"]]
-    assert "model/test/version" in names2
+    assert "/model/test/version" in names2
     assert len(names2) == 1
+
+
+def test_version_manager_creation_validates_param_name(
+    mocked_aws, s3_client, s3_bucket, ssm_client, model_bucket
+):
+    with pytest.raises(ValueError):
+        version_manager = ModelVersionManager(
+            s3_bucket=model_bucket,
+            s3_prefix="/model/test/version",
+            param_store_name="model/test/version",
+        )

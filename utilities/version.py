@@ -28,6 +28,11 @@ class ModelVersionManager:
     """
 
     def __init__(self, s3_bucket, s3_prefix, param_store_name):
+        if param_store_name[0] != "/":
+            print(
+                "Parameter store name must be fully-qualified, including leading slash, e.g. /my/model/version"
+            )
+            raise ValueError("Parameter store name must be fully-qualified")
         self.s3_bucket = s3_bucket
         self.s3_prefix = s3_prefix
         self.ssm_client = boto3.client("ssm", region_name=REGION)

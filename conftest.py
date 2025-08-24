@@ -53,7 +53,7 @@ def s3_bucket(s3_client, model_bucket):
 def ssm_parameter(ssm_client):
     """Mocked SSM Parameter for moto."""
     ssm_client.put_parameter(
-        Name="model/test/version", Value='{"Current Version": "5.6.7"}', Type="String"
+        Name="/model/test/version", Value='{"Current Version": "5.6.7"}', Type="String"
     )
 
 
