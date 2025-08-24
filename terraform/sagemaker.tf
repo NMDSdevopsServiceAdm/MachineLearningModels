@@ -7,6 +7,11 @@ resource "aws_sagemaker_notebook_instance" "models_notebook" {
   lifecycle_config_name = aws_sagemaker_notebook_instance_lifecycle_configuration.models_lifecycle_config[each.value].name
 
   default_code_repository = aws_sagemaker_code_repository.models_repo[each.value].id
+
+  tags = {
+    PYTHONPATH = "/home/ec2-user/SageMaker/MachineLearningModels"
+    ENV        = each.value
+  }
 }
 
 resource "aws_sagemaker_code_repository" "models_repo" {
