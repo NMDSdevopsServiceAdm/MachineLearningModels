@@ -161,18 +161,3 @@ def test_puts_new_version_if_none_available(
     names2 = [p["Name"] for p in response2["Parameters"]]
     assert "model/test/version" in names2
     assert len(names2) == 1
-
-
-@patch("builtins.input", side_effect=["yes", "2"])
-def test_puts_new_version_if_none_available(
-    mock_input, fitted_model, s3_bucket, s3_client, ssm_client, version_manager
-):
-    response1 = version_manager.ssm_client.describe_parameters()
-    names1 = [p["Name"] for p in response1["Parameters"]]
-    assert len(names1) == 0
-    version_manager.prompt_and_save(fitted_model)
-    assert version_manager.get_current_version() == "0.1.0"
-    response2 = version_manager.ssm_client.describe_parameters()
-    names2 = [p["Name"] for p in response2["Parameters"]]
-    assert "model/test/version" in names2
-    assert len(names2) == 1
