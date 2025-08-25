@@ -90,7 +90,7 @@ export $VAR2=$TAG2
 EOF
 chmod +x $ENV2
 
-echo "Step 4 - Setting the GitHub credentials..."
+echo "STEP 4 - Setting the GitHub credentials..."
 # Set the deploy key
 SECRET_NAME="sagemaker/${env}/deploy"
 REGION="eu-west-2"
@@ -139,7 +139,7 @@ while [ "$ELAPSED_TIME" -lt "$TIMEOUT" ]; do
     if [ -d "$REPO_ROOT" ]; then
         echo "Directory $REPO_ROOT exists."
         cd $REPO_ROOT
-        git remote set-url origin git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git
+        sudo -u ec2-user git remote set-url origin git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git
         echo "Git remote updated."
         break
     fi
