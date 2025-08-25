@@ -75,16 +75,36 @@ echo "Starting the SageMaker autostop script in cron"
 
 REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
 
-# Check if the directory exists
-if [ -d "$REPO_ROOT" ]; then
-    echo "export PYTHONPATH=\"$REPO_ROOT:\$PYTHONPATH\"" >> /home/ec2-user/.bashrc
+# Setting environment variables
+VAR1=PYTHONPATH
+VAR2=ENV
 
-    source /home/ec2-user/.bashrc
+INSTANCE_ARN=$(jq '.ResourceArn' /opt/ml/metadata/resource-metadata.json --raw-output)
+touch /etc/profile.d/jupyter-env.sh
 
-    echo "PYTHONPATH configured to include $REPO_ROOT"
-else
-    echo "Repository directory $REPO_ROOT not found. Skipping PYTHONPATH configuration."
-fi
+TAG1=$(aws sagemaker list-tags --resource-arn $INSTANCE_ARN | jq -r --arg VAR1 "$VAR1" .'Tags[] | select(.Key == $VAR1).Value' --raw-output)
+TAG2=$(aws sagemaker list-tags --resource-arn $INSTANCE_ARN | jq -r --arg VAR2 "$VAR2" .'Tags[] | select(.Key == $VAR2).Value' --raw-output)
+
+echo "export $VAR1=$TAG1" >> /etc/profile.d/jupyter-env.sh
+echo "export $VAR2=$TAG2" >> /etc/profile.d/jupyter-env.sh
+
+ENV1="/home/ec2-user/anaconda3/envs/python3/etc/conda/activate.d/env_vars.sh"
+ENV2="/home/ec2-user/anaconda3/etc/conda/activate.d/env_vars.sh"
+
+# Setting in both the base and python3 conda environments
+cat > $ENV1 << EOF
+#!/bin/bash
+export $VAR1=$TAG1
+export $VAR2=$TAG2
+EOF
+chmod +x $ENV1
+
+cat > $ENV2 << EOF
+#!/bin/bash
+export $VAR1=$TAG1
+export $VAR2=$TAG2
+EOF
+chmod +x $ENV2
 
 
 
