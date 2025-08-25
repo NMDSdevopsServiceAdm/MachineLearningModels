@@ -14,12 +14,13 @@ set -e
 #  - sets the git configuration for the ssh protocol
 # Note this may timeout if the package installations in all environments take longer than 5 mins.
 
-conda install polars --name base --yes
+sudo -u ec2-user -i <<'EOF'
 
-# Note that "base" is special environment name, include it there as well.
 source /home/ec2-user/anaconda3/bin/activate python3
 conda install polars --name "python3" --yes
 conda deactivate
+
+EOF
 
 set -ex
 
