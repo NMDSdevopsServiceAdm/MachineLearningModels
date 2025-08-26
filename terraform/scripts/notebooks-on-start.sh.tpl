@@ -107,7 +107,7 @@ sudo -u ec2-user -i 'EOF'
       --query SecretString \
       --output text > $FILENAME
 
-  mv $FILENAME "${SSH_DIR}/${FILENAME}"
+  mv $FILENAME "$SSH_DIR/$FILENAME"
 
   chmod 600 "$SSH_DIR/$FILENAME"
 EOF
