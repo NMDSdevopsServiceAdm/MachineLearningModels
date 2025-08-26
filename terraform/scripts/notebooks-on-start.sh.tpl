@@ -123,7 +123,7 @@ sudo -u ec2-user -i << EOF
 
 EOF
 
-sudo -u ec2-user -i << EOF
+sudo -u ec2-user -i << 'EOF'
   echo "Setting the git remote url..."
 
   # Set the git remote url, checking first that the directory exists.
@@ -133,7 +133,7 @@ sudo -u ec2-user -i << EOF
   CHECK_INTERVAL=5
   REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
 
-  while [ "$ELAPSED_TIME" -lt "$TIMEOUT" ]; do
+  while [ $ELAPSED_TIME -lt $TIMEOUT ]; do
 
       if [ -d "$REPO_ROOT" ]; then
           echo "Directory $REPO_ROOT exists."

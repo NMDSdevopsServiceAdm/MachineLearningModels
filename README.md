@@ -78,3 +78,5 @@ directory. The main elements of the configuration are:
 instance, the deployment key only allows reads from GitHub. Code changes should be made through the `dev` instance. 
 For details of the process, see [the GitHub documentation](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
 
+For examples of lifecycle configuration scripts, see the [official AWS example repository](https://github.com/aws-samples/amazon-sagemaker-notebook-instance-lifecycle-config-samples).
+

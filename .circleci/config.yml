@@ -85,9 +85,9 @@ jobs:
 
   terraform-plan:
     parameters:
-      build_file:
+      workspace:
         type: string
-        default: "build_vars_dev.tfvars"
+        default: "default"
     working_directory: /tmp/project
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
@@ -99,7 +99,8 @@ jobs:
           command: |
             cd terraform
             terraform init -input=false
-            terraform plan -var-file=<< parameters.build_file >> -out tfapply
+            terraform workspace select << parameters.workspace >> || terraform workspace new << parameters.workspace >>
+            terraform plan -out tfapply
       - store_artifacts:
           path: terraform/tfapply
       - persist_to_workspace:
@@ -111,6 +112,10 @@ jobs:
 
 
   terraform-apply:
+    parameters:
+      workspace:
+        type: string
+        default: "default"
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
     resource_class: small
@@ -122,6 +127,7 @@ jobs:
           name: terraform apply
           command: |
             cd terraform
+            terraform workspace select << parameters.workspace >>
             terraform apply -auto-approve tfapply
 
 
@@ -138,7 +144,7 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
-          build_file: "build_vars_prod.tfvars"
+          workspace: "prod"
           requires:
             - lint-terraform
             - run-checks
@@ -160,7 +166,6 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
-          build_file: "build_vars_dev.tfvars"
           requires:
             - lint-terraform
             - run-checks
@@ -184,7 +189,6 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
-          build_file: "build_vars_dev.tfvars"
           requires:
             - lint-terraform
             - run-checks
