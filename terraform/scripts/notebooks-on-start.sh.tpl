@@ -99,7 +99,7 @@ SSH_DIR="/home/ec2-user/.ssh"
 
 cd /home/ec2-user
 
-sudo -u ec2-user -i 'EOF'
+sudo -u ec2-user -i << 'EOF'
   echo "Getting Deploy Private Key..."
   aws secretsmanager get-secret-value \
       --secret-id "$SECRET_NAME" \
@@ -112,7 +112,7 @@ sudo -u ec2-user -i 'EOF'
   chmod 600 "$SSH_DIR/$FILENAME"
 EOF
 
-sudo -u ec2-user -i 'EOF'
+sudo -u ec2-user -i << 'EOF'
   echo "Configuring SSH for GitHub..."
   echo "Host github.com" >> "$SSH_DIR/config"
   echo "  HostName github.com" >> "$SSH_DIR/config"
@@ -130,7 +130,7 @@ sudo -u ec2-user -i 'EOF'
 
 EOF
 
-sudo -u ec2-user -i 'EOF'
+sudo -u ec2-user -i << 'EOF'
   echo "Setting the git remote url..."
 
   # Set the git remote url, checking first that the directory exists.
