@@ -63,7 +63,18 @@ The following tests are standard:
 4. Docstrings: `pipenv run pydoclint --style=google --quiet .`
 5. Dependency checks: `pipenv run pip-audit`
 6. Code vulnerability check: `pipenv run bandit -c bandit.yaml -r utilities`
-7. You can also do Terraform checks using the `terraform fmt` and `terraform validate` commands.
+7. You can also perform Terraform checks using the `terraform fmt` and `terraform validate` commands.
 
-
+## Lifecycle configuration
+The SageMaker instance deployment requires a [lifecycle configuration](https://docs.aws.amazon.com/sagemaker/latest/dg/notebook-lifecycle-config.html)
+script which allows the instance to have customised settings. An "on-start" script template is included in the Terraform 
+directory. The main elements of the configuration are:
+1. Installing the Python [Polars](https://pola.rs/) library for use in notebooks. Other dependencies are already included on the instance by default.
+2. Installing a Python script that shuts down the instance if it is idle for an hour (or specified time).
+3. Setting environment variables:
+    - `ENV` gives the environment identifier, e.g. "dev" or "prod"
+    - `PYTHONPATH` extends the Python search path to allow utility code to be imported easily
+4. Setting up a GitHub deploy key so that code can be pulled and pushed from and to GitHub. In the case of the `prod`
+instance, the deployment key only allows reads from GitHub. Code changes should be made through the `dev` instance. 
+For details of the process, see [the GitHub documentation](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
 
