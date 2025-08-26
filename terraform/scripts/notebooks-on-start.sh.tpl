@@ -94,66 +94,69 @@ echo "STEP 4 - Setting the GitHub credentials..."
 # Set the deploy key
 SECRET_NAME="sagemaker/${env}/deploy"
 REGION="eu-west-2"
-FILENAME="${env}_private_key"
+FILENAME="${env}_public_key"
 SSH_DIR="/home/ec2-user/.ssh"
 
-#cd /home/ec2-user
-#
-#sudo -u ec2-user -i 'EOF'
-#  echo "Getting Deploy Private Key..."
-#  aws secretsmanager get-secret-value \
-#      --secret-id "$SECRET_NAME" \
-#      --region "$REGION" \
-#      --query SecretString \
-#      --output text > $FILENAME
-#
-#  mv $FILENAME "$SSH_DIR"
-#
-#  chmod 600 "$SSH_DIR/$FILENAME"
-#EOF
-#
-#sudo -u ec2-user -i 'EOF'
-#  echo "Adding SSH Private Key..."
-#  eval "$(ssh-agent -s)"
-#
-#  ssh-add "$SSH_DIR/$FILENAME"
-#
-#  echo "Configuring SSH for GitHub..."
-#  echo "Host github.com" >> "$SSH_DIR/config"
-#  echo "  HostName github.com" >> "$SSH_DIR/config"
-#  echo "  IdentityFile $SSH_DIR/$FILENAME" >> "$SSH_DIR/config"
-#  echo "  StrictHostKeyChecking no" >> "$SSH_DIR/config"
-#  echo "  UserKnownHostsFile /dev/null" >> "$SSH_DIR/config"
-#  echo "  User git" >> "$SSH_DIR/config"
-#
-#  chmod 600 "$SSH_DIR/config"
-#EOF
-#
-#sudo -u ec2-user -i 'EOF'
-#  echo "Setting the git remote url..."
-#
-#  # Set the git remote url, checking first that the directory exists.
-#
-#  ELAPSED_TIME=0
-#  TIMEOUT=120
-#  CHECK_INTERVAL=5
-#  REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
-#
-#  while [ "$ELAPSED_TIME" -lt "$TIMEOUT" ]; do
-#
-#      if [ -d "$REPO_ROOT" ]; then
-#          echo "Directory $REPO_ROOT exists."
-#          cd $REPO_ROOT
-#          git remote set-url origin git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git
-#          echo "Git remote updated."
-#          break
-#      fi
-#
-#      echo "Directory not found yet. Checking again in $CHECK_INTERVAL seconds..."
-#      sleep "$CHECK_INTERVAL"
-#
-#      # Increment the elapsed time counter.
-#      ELAPSED_TIME=$((ELAPSED_TIME + CHECK_INTERVAL))
-#
-#  done
-#EOF
+cd /home/ec2-user
+
+sudo -u ec2-user -i 'EOF'
+  echo "Getting Deploy Private Key..."
+  aws secretsmanager get-secret-value \
+      --secret-id "$SECRET_NAME" \
+      --region "$REGION" \
+      --query SecretString \
+      --output text > $FILENAME
+
+  mv $FILENAME "${SSH_DIR}/${FILENAME}"
+
+  chmod 600 "$SSH_DIR/$FILENAME"
+EOF
+
+sudo -u ec2-user -i 'EOF'
+  echo "Configuring SSH for GitHub..."
+  echo "Host github.com" >> "$SSH_DIR/config"
+  echo "  HostName github.com" >> "$SSH_DIR/config"
+  echo "  IdentityFile $SSH_DIR/$FILENAME" >> "$SSH_DIR/config"
+  echo "  User git" >> "$SSH_DIR/config"
+
+  chmod 600 "$SSH_DIR/config"
+  ssh-keyscan -H github.com >> "$SSH_DIR/known_hosts"
+  chmod 644 "$SSH_DIR/known_hosts"
+
+  echo "Adding SSH Private Key..."
+  eval "$(ssh-agent -s)"
+
+  ssh-add "$SSH_DIR/$FILENAME"
+
+EOF
+
+sudo -u ec2-user -i 'EOF'
+  echo "Setting the git remote url..."
+
+  # Set the git remote url, checking first that the directory exists.
+
+  ELAPSED_TIME=0
+  TIMEOUT=120
+  CHECK_INTERVAL=5
+  REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
+
+  while [ "$ELAPSED_TIME" -lt "$TIMEOUT" ]; do
+
+      if [ -d "$REPO_ROOT" ]; then
+          echo "Directory $REPO_ROOT exists."
+          cd $REPO_ROOT
+          git remote set-url origin git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git
+          echo "Git remote updated."
+          break
+      fi
+
+      echo "Directory not found yet. Checking again in $CHECK_INTERVAL seconds..."
+      sleep "$CHECK_INTERVAL"
+
+      # Increment the elapsed time counter.
+      ELAPSED_TIME=$((ELAPSED_TIME + CHECK_INTERVAL))
+
+  done
+EOF
+
+echo "CONFIGURATION COMPLETED"
