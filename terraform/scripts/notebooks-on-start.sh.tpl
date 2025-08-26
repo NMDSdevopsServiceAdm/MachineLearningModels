@@ -14,6 +14,7 @@ set -e
 #  - sets the git configuration for the ssh protocol
 # Note this may timeout if the package installations in all environments take longer than 5 mins.
 
+echo "STEP 1 - Installing Polars..."
 sudo -u ec2-user -i <<'EOF'
 
 source /home/ec2-user/anaconda3/bin/activate python3
@@ -29,7 +30,7 @@ set -ex
 # PARAMETERS
 IDLE_TIME=3600
 
-echo "Fetching the autostop script"
+echo "STEP 2 - Installing the autostop script..."
 aws s3 cp "s3://${bucket}/scripts/python/${env}/autostop.py" .
 
 echo "Detecting Python install with boto3 install"
@@ -55,6 +56,8 @@ echo "Starting the SageMaker autostop script in cron"
 (crontab -l 2>/dev/null; echo "*/5 * * * * $PYTHON_DIR $PWD/autostop.py --time $IDLE_TIME --ignore-connections >> /var/log/jupyter.log") | crontab -
 
 # Setting environment variables
+
+echo "STEP 3 - Getting and setting environment variables..."
 VAR1=PYTHONPATH
 VAR2=ENV
 
@@ -87,70 +90,70 @@ export $VAR2=$TAG2
 EOF
 chmod +x $ENV2
 
-
+echo "STEP 4 - Setting the GitHub credentials..."
 # Set the deploy key
 SECRET_NAME="sagemaker/${env}/deploy"
 REGION="eu-west-2"
 FILENAME="${env}_private_key"
 SSH_DIR="/home/ec2-user/.ssh"
 
-cd /home/ec2-user
-
-echo "Getting Deploy Private Key..."
-aws secretsmanager get-secret-value \
-    --secret-id "$SECRET_NAME" \
-    --region "$REGION" \
-    --query SecretString \
-    --output text > $FILENAME
-
-mv $FILENAME "$SSH_DIR"
-
-chmod 600 "$SSH_DIR/$FILENAME"
-
-echo "Adding SSH Private Key..."
-eval "$(ssh-agent -s)"
-
-ssh-add "$SSH_DIR/$FILENAME"
-
-echo "Configuring SSH for GitHub..."
-echo "Host github.com" >> "$SSH_DIR/config"
-echo "  HostName github.com" >> "$SSH_DIR/config"
-echo "  IdentityFile $SSH_DIR/$FILENAME" >> "$SSH_DIR/config"
-echo "  User git" >> "$SSH_DIR/config"
-
-chmod 600 "$SSH_DIR/config"
-
-ssh-keyscan -H github.com >> "$SSH_DIR/known_hosts"
-chmod 644 "$SSH_DIR/known_hosts"
-
-
-# Set the git remote url, checking first that the directory exists (background process)
-
-nohup bash -c '
-  ELAPSED_TIME=0
-  TIMEOUT=120
-  CHECK_INTERVAL=5
-  REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
-
-  while [ "$ELAPSED_TIME" -lt "$TIMEOUT" ]; do
-
-      if [ -d "$REPO_ROOT" ]; then
-          echo "Directory $REPO_ROOT exists."
-          cd $REPO_ROOT
-          git remote set-url origin git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git
-          break
-      fi
-
-      echo "Directory not found yet. Checking again in $CHECK_INTERVAL seconds..."
-      sleep "$CHECK_INTERVAL"
-
-      # Increment the elapsed time counter.
-      ELAPSED_TIME=$((ELAPSED_TIME + CHECK_INTERVAL))
-
-  done' > /dev/null 2>&1 &
-
-  echo "Git remote update process started in background. Exiting."
-
-  exit 0
-
-
+#cd /home/ec2-user
+#
+#sudo -u ec2-user -i 'EOF'
+#  echo "Getting Deploy Private Key..."
+#  aws secretsmanager get-secret-value \
+#      --secret-id "$SECRET_NAME" \
+#      --region "$REGION" \
+#      --query SecretString \
+#      --output text > $FILENAME
+#
+#  mv $FILENAME "$SSH_DIR"
+#
+#  chmod 600 "$SSH_DIR/$FILENAME"
+#EOF
+#
+#sudo -u ec2-user -i 'EOF'
+#  echo "Adding SSH Private Key..."
+#  eval "$(ssh-agent -s)"
+#
+#  ssh-add "$SSH_DIR/$FILENAME"
+#
+#  echo "Configuring SSH for GitHub..."
+#  echo "Host github.com" >> "$SSH_DIR/config"
+#  echo "  HostName github.com" >> "$SSH_DIR/config"
+#  echo "  IdentityFile $SSH_DIR/$FILENAME" >> "$SSH_DIR/config"
+#  echo "  StrictHostKeyChecking no" >> "$SSH_DIR/config"
+#  echo "  UserKnownHostsFile /dev/null" >> "$SSH_DIR/config"
+#  echo "  User git" >> "$SSH_DIR/config"
+#
+#  chmod 600 "$SSH_DIR/config"
+#EOF
+#
+#sudo -u ec2-user -i 'EOF'
+#  echo "Setting the git remote url..."
+#
+#  # Set the git remote url, checking first that the directory exists.
+#
+#  ELAPSED_TIME=0
+#  TIMEOUT=120
+#  CHECK_INTERVAL=5
+#  REPO_ROOT="/home/ec2-user/SageMaker/MachineLearningModels"
+#
+#  while [ "$ELAPSED_TIME" -lt "$TIMEOUT" ]; do
+#
+#      if [ -d "$REPO_ROOT" ]; then
+#          echo "Directory $REPO_ROOT exists."
+#          cd $REPO_ROOT
+#          git remote set-url origin git@github.com:NMDSdevopsServiceAdm/MachineLearningModels.git
+#          echo "Git remote updated."
+#          break
+#      fi
+#
+#      echo "Directory not found yet. Checking again in $CHECK_INTERVAL seconds..."
+#      sleep "$CHECK_INTERVAL"
+#
+#      # Increment the elapsed time counter.
+#      ELAPSED_TIME=$((ELAPSED_TIME + CHECK_INTERVAL))
+#
+#  done
+#EOF
