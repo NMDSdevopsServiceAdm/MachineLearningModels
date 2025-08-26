@@ -121,11 +121,6 @@ sudo -u ec2-user -i << EOF
   ssh-keyscan -H github.com >> "$SSH_DIR/known_hosts"
   chmod 644 "$SSH_DIR/known_hosts"
 
-  echo "Adding SSH Private Key..."
-  eval "$(ssh-agent -s)"
-
-  ssh-add "$SSH_DIR/$FILENAME"
-
 EOF
 
 sudo -u ec2-user -i << EOF
