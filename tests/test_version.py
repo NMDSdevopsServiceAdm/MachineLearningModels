@@ -29,6 +29,17 @@ def version_manager(mocked_aws, s3_client, s3_bucket, ssm_client, model_bucket):
 
 
 @pytest.fixture
+def version_manager_patch(mocked_aws, s3_client, s3_bucket, ssm_client, model_bucket):
+    """A pytest fixture to provide a ModelVersionManager instance."""
+    return ModelVersionManager(
+        s3_bucket=model_bucket,
+        s3_prefix="model/test/version",
+        param_store_name="/model/test/version",
+        default_patch=True,
+    )
+
+
+@pytest.fixture
 def fitted_model():
     """A dummy model instance with parameters set."""
     return DummyModel(name="clever_model", param1=17, param2=26)
@@ -172,3 +183,18 @@ def test_version_manager_creation_validates_param_name(
             s3_prefix="/model/test/version",
             param_store_name="model/test/version",
         )
+
+
+def test_version_manager_can_create_default_patch_version(
+    mocked_aws, version_manager_patch, ssm_client, fitted_model, ssm_parameter
+):
+    response1 = version_manager_patch.ssm_client.describe_parameters()
+    names1 = [p["Name"] for p in response1["Parameters"]]
+    assert len(names1) == 1
+    assert version_manager_patch.get_current_version() == "5.6.7"
+    version_manager_patch.prompt_and_save(fitted_model)
+    assert version_manager_patch.get_current_version() == "5.6.8"
+    response2 = version_manager_patch.ssm_client.describe_parameters()
+    names2 = [p["Name"] for p in response2["Parameters"]]
+    assert "/model/test/version" in names2
+    assert len(names2) == 1
