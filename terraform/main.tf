@@ -21,3 +21,6 @@ terraform {
 
 data "aws_caller_identity" "current" {}
 
+locals {
+  env = terraform.workspace == "default" ? "dev" : "prod"
+}

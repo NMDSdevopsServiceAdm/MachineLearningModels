@@ -1,39 +1,38 @@
 resource "aws_sagemaker_notebook_instance" "models_notebook" {
-  for_each              = var.env
-  name                  = "${each.value}-models-notebook"
-  role_arn              = aws_iam_role.sagemaker_execution_role[each.value].arn
-  instance_type         = var.env_config[each.value].instance_type
-  volume_size           = var.env_config[each.value].volume_size
-  lifecycle_config_name = aws_sagemaker_notebook_instance_lifecycle_configuration.models_lifecycle_config[each.value].name
+  name                  = "${local.env}-models-notebook"
+  role_arn              = aws_iam_role.sagemaker_execution_role.arn
+  instance_type         = var.env_config[local.env].instance_type
+  volume_size           = var.env_config[local.env].volume_size
+  lifecycle_config_name = aws_sagemaker_notebook_instance_lifecycle_configuration.models_lifecycle_config.name
 
-  default_code_repository = aws_sagemaker_code_repository.models_repo[each.value].id
+  default_code_repository = aws_sagemaker_code_repository.models_repo.id
+
+  tags = {
+    PYTHONPATH = "/home/ec2-user/SageMaker/MachineLearningModels"
+    ENV        = local.env
+  }
 }
 
 resource "aws_sagemaker_code_repository" "models_repo" {
-  for_each = var.env
-
-  code_repository_name = "${each.value}-models-github-repository"
+  code_repository_name = "${local.env}-models-github-repository"
 
   git_config {
     repository_url = var.github_repository_url
-    branch         = each.value == "prod" ? "main" : each.value
+    branch         = local.env == "prod" ? "main" : local.env
   }
 }
 
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "models_lifecycle_config" {
-  for_each = var.env
-  name     = "${each.value}-models-lifecycle"
-  on_start = base64encode(templatefile("${path.module}/scripts/notebooks-on-start.sh.tpl", { env = each.value,
+  name = "${local.env}-models-lifecycle"
+  on_start = base64encode(templatefile("${path.module}/scripts/notebooks-on-start.sh.tpl", { env = local.env,
   bucket = var.config_bucket_name }))
-  on_create = base64encode(templatefile("${path.module}/scripts/notebook-instance-on-create.sh.tpl", { env = each.value }))
 
   depends_on = [aws_s3_object.autostop_script]
 }
 
 resource "aws_s3_object" "autostop_script" {
-  for_each = var.env
-  bucket   = var.config_bucket_name
-  key      = "scripts/python/${each.value}/autostop.py"
-  source   = "scripts/autostop.py"
-  etag     = filemd5("scripts/autostop.py")
+  bucket = var.config_bucket_name
+  key    = "scripts/python/${local.env}/autostop.py"
+  source = "scripts/autostop.py"
+  etag   = filemd5("scripts/autostop.py")
 }

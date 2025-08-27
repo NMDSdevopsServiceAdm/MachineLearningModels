@@ -85,9 +85,9 @@ jobs:
 
   terraform-plan:
     parameters:
-      build_file:
+      workspace:
         type: string
-        default: "build_vars_dev.tfvars"
+        default: "default"
     working_directory: /tmp/project
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
@@ -99,7 +99,8 @@ jobs:
           command: |
             cd terraform
             terraform init -input=false
-            terraform plan -var-file=<< parameters.build_file >> -out tfapply
+            terraform workspace select << parameters.workspace >> || terraform workspace new << parameters.workspace >>
+            terraform plan -out tfapply
       - store_artifacts:
           path: terraform/tfapply
       - persist_to_workspace:
@@ -111,6 +112,10 @@ jobs:
 
 
   terraform-apply:
+    parameters:
+      workspace:
+        type: string
+        default: "default"
     docker:
       - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
     resource_class: small
@@ -122,6 +127,7 @@ jobs:
           name: terraform apply
           command: |
             cd terraform
+            terraform workspace select << parameters.workspace >>
             terraform apply -auto-approve tfapply
 
 
@@ -138,15 +144,15 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
-          build_file: "build_vars_prod.tfvars"
+          workspace: "prod"
           requires:
-            - lint-terraform
             - run-checks
       - plan-approval:
           type: approval
           requires:
             - terraform-plan
       - terraform-apply:
+          workspace: "prod"
           requires:
             - plan-approval
   plan-and-deploy-to-dev:
@@ -155,12 +161,32 @@ workflows:
       - lint-terraform:
           filters:
             branches:
-              ignore: main
+              only: dev
       - run-checks:
           requires:
             - lint-terraform
       - terraform-plan:
-          build_file: "build_vars_dev.tfvars"
+          requires:
+            - run-checks
+      - plan-approval:
+          type: approval
+          requires:
+            - terraform-plan
+      - terraform-apply:
+          requires:
+            - plan-approval
+  plan-and-commit-to-branch:
+    unless: << pipeline.parameters.GHA_Action >>
+    jobs:
+      - lint-terraform:
+          filters:
+            branches:
+              ignore:
+                - main
+                - dev
+      - run-checks:
           requires:
             - lint-terraform
+      - terraform-plan:
+          requires:
             - run-checks

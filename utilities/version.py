@@ -28,6 +28,11 @@ class ModelVersionManager:
     """
 
     def __init__(self, s3_bucket, s3_prefix, param_store_name):
+        if param_store_name[0] != "/":
+            print(
+                "Parameter store name must be fully-qualified, including leading slash, e.g. /my/model/version"
+            )
+            raise ValueError("Parameter store name must be fully-qualified")
         self.s3_bucket = s3_bucket
         self.s3_prefix = s3_prefix
         self.ssm_client = boto3.client("ssm", region_name=REGION)
@@ -128,7 +133,7 @@ class ModelVersionManager:
             current_version = self.get_current_version()
             new_version = self.increment_version(current_version, change_type)
             return new_version
-        except self.ssm_client.exceptions.ParameterNotFound:
+        except (self.ssm_client.exceptions.ParameterNotFound, ClientError):
             print(
                 f"Parameter '{self.param_store_name}' not found. Initializing to 0.1.0."
             )
