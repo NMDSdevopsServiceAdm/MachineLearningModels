@@ -135,14 +135,10 @@ workflows:
   version: 2
   plan-approve-and-deploy-to-main:
     unless: << pipeline.parameters.GHA_Action >>
+    when: pipeline.git.branch == "main"
     jobs:
       - lint-terraform:
-          filters:
-            branches:
-              only: main
       - run-checks:
-          requires:
-            - lint-terraform
       - terraform-plan:
           workspace: "prod"
           requires:
@@ -157,14 +153,10 @@ workflows:
             - plan-approval
   plan-and-deploy-to-dev:
     unless: << pipeline.parameters.GHA_Action >>
+    when: pipeline.git.branch == "dev"
     jobs:
       - lint-terraform:
-          filters:
-            branches:
-              only: dev
       - run-checks:
-          requires:
-            - lint-terraform
       - terraform-plan:
           requires:
             - lint-terraform
@@ -178,16 +170,15 @@ workflows:
             - plan-approval
   plan-and-commit-to-branch:
     unless: << pipeline.parameters.GHA_Action >>
+    when:
+      and:
+        - not:
+            - equal [ main, << pipeline.git.branch >>]
+        - not:
+            - equal [ dev, << pipeline.git.branch >>]
     jobs:
       - lint-terraform:
-          filters:
-            branches:
-              ignore:
-                - main
-                - dev
       - run-checks:
-          requires:
-            - lint-terraform
       - terraform-plan:
           requires:
             - lint-terraform
