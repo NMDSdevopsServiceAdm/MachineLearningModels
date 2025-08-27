@@ -137,8 +137,8 @@ workflows:
     unless: << pipeline.parameters.GHA_Action >>
     when: pipeline.git.branch == "main"
     jobs:
-      - lint-terraform:
-      - run-checks:
+      - lint-terraform
+      - run-checks
       - terraform-plan:
           workspace: "prod"
           requires:
@@ -155,8 +155,8 @@ workflows:
     unless: << pipeline.parameters.GHA_Action >>
     when: pipeline.git.branch == "dev"
     jobs:
-      - lint-terraform:
-      - run-checks:
+      - lint-terraform
+      - run-checks
       - terraform-plan:
           requires:
             - lint-terraform
@@ -177,8 +177,8 @@ workflows:
         - not:
             - equal [ dev, << pipeline.git.branch >>]
     jobs:
-      - lint-terraform:
-      - run-checks:
+      - lint-terraform
+      - run-checks
       - terraform-plan:
           requires:
             - lint-terraform
