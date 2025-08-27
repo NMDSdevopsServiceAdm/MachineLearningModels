@@ -146,13 +146,13 @@ workflows:
       - terraform-plan:
           workspace: "prod"
           requires:
-            - lint-terraform
             - run-checks
       - plan-approval:
           type: approval
           requires:
             - terraform-plan
       - terraform-apply:
+          workspace: "prod"
           requires:
             - plan-approval
   plan-and-deploy-to-dev:
@@ -167,7 +167,6 @@ workflows:
             - lint-terraform
       - terraform-plan:
           requires:
-            - lint-terraform
             - run-checks
       - plan-approval:
           type: approval
@@ -190,5 +189,4 @@ workflows:
             - lint-terraform
       - terraform-plan:
           requires:
-            - lint-terraform
             - run-checks
