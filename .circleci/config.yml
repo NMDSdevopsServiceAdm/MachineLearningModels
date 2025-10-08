@@ -36,6 +36,7 @@ jobs:
           command: |
             pip install pipenv
             pipenv install --dev
+            export PIPENV_VERBOSITY=-1
 
       - save_cache:
           key: v1.1-deps-{{ checksum "Pipfile.lock" }}
@@ -65,7 +66,7 @@ jobs:
       - run:
           name: Dependency audit
           command: |
-            pipenv run pip-audit 
+            pipenv run pip-audit -r <(pipenv requirements) 
 
       - run:
           name: Security check
