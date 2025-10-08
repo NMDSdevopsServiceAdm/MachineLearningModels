@@ -1,0 +1,2 @@
+bucket = "sfc-sagemaker-model-config"
+allowed_account_ids = ["344210435447"] # DO NOT REMOVE THIS

@@ -11,7 +11,7 @@ provider "aws" {
 
 terraform {
   backend "s3" {
-    bucket         = "sfc-sagemaker-model-config"
+    # Bucket defined in ../*.s3.tfbackend
     key            = "terraform/statefiles/machine-learning-models/backend.tfstate"
     region         = "eu-west-2"
     dynamodb_table = "models-terraform-locks"
