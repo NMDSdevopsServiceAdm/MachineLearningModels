@@ -2,25 +2,23 @@ variable "region" {
   default = "eu-west-2"
 }
 
-variable "config_bucket_name" {
-  type    = string
-  default = "sfc-sagemaker-model-config"
-}
-
 variable "env_config" {
   description = "Map of environment configurations"
   type = map(object({
-    instance_type = string
-    volume_size   = number
+    instance_type      = string
+    volume_size        = number
+    config_bucket_name = string
   }))
   default = {
     dev = {
-      instance_type = "ml.m5.2xlarge"
-      volume_size   = 10
+      instance_type      = "ml.m5.2xlarge"
+      volume_size        = 10
+      config_bucket_name = "sfc-sagemaker-model-config-dev"
     }
     prod = {
-      instance_type = "ml.m5.2xlarge"
-      volume_size   = 10
+      instance_type      = "ml.m5.2xlarge"
+      volume_size        = 10
+      config_bucket_name = "sfc-sagemaker-model-config"
     }
   }
 }

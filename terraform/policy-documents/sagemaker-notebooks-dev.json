@@ -10,10 +10,9 @@
                 "s3:AbortMultipartUpload"
             ],
             "Resource": [
-                "arn:aws:s3:::sfc-main-datasets/*",
-                "arn:aws:s3:::sfc-main-datasets/*",
-                "arn:aws:s3:::spike-polars-data/*",
-                "arn:aws:s3:::sfc-mt-sagemaker-demo/*"
+                "arn:aws:s3:::sfc-*-datasets/*",
+                "arn:aws:s3:::sfc-*-datasets/*",
+                "arn:aws:s3:::sfc-mt-sagemaker-demo-dev/*"
             ]
         },
         {
@@ -23,7 +22,7 @@
                 "s3:DeleteObject"
             ],
             "Resource": [
-                "arn:aws:s3:::sfc-main-*"
+                "arn:aws:s3:::sfc-*"
             ]
         },
         {
@@ -35,7 +34,7 @@
                 "secretsmanager:ListSecretVersionIds"
             ],
             "Resource": [
-              "arn:aws:secretsmanager:eu-west-2:344210435447:secret:*"
+              "arn:aws:secretsmanager:eu-west-2:856699698263:secret:*"
             ]
         },
         {
@@ -49,7 +48,7 @@
                 "ssm:GetParameter",
                 "ssm:DeleteParameters"
             ],
-            "Resource": "arn:aws:ssm:eu-west-2:344210435447:parameter/*"
+            "Resource": "arn:aws:ssm:eu-west-2:856699698263:parameter/*"
         },
           {
             "Effect": "Allow",
