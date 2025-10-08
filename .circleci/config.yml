@@ -36,6 +36,7 @@ jobs:
           command: |
             pip install pipenv
             pipenv install --dev
+            export PIPENV_VERBOSITY=-1
 
       - save_cache:
           key: v1.1-deps-{{ checksum "Pipfile.lock" }}
@@ -65,7 +66,7 @@ jobs:
       - run:
           name: Dependency audit
           command: |
-            pipenv run pip-audit 
+            pipenv run pip-audit -r <(pipenv requirements) 
 
       - run:
           name: Security check
@@ -85,20 +86,30 @@ jobs:
 
   terraform-plan:
     parameters:
+      aws_account:
+        type: enum
+        description: The short name of the AWS account, used to reference the relevant `tfbackend` file, and auth credentials
+        enum: [ "prod", "dev" ]
+      access_key:
+        type: env_var_name
+      secret_key:
+        type: env_var_name
       workspace:
         type: string
         default: "default"
     working_directory: /tmp/project
     docker:
-      - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
+      - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.13.1
     resource_class: small
     steps:
       - checkout
       - run:
           name: terraform plan
           command: |
+            export AWS_ACCESS_KEY_ID=${<< parameters.access_key >>}
+            export AWS_SECRET_ACCESS_KEY=${<< parameters.secret_key >>}
             cd terraform
-            terraform init -input=false
+            terraform init -input=false -backend-config=./<< parameters.aws_account >>.s3.tfbackend
             terraform workspace select << parameters.workspace >> || terraform workspace new << parameters.workspace >>
             terraform plan -out tfapply
       - store_artifacts:
@@ -113,11 +124,19 @@ jobs:
 
   terraform-apply:
     parameters:
+      aws_account:
+        type: enum
+        description: The short name of the AWS account, used to reference the relevant auth credentials
+        enum: [ "prod", "dev" ]
+      access_key:
+        type: env_var_name
+      secret_key:
+        type: env_var_name
       workspace:
         type: string
         default: "default"
     docker:
-      - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
+      - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.13.1
     resource_class: small
     steps:
       - attach_workspace:
@@ -126,9 +145,39 @@ jobs:
       - run:
           name: terraform apply
           command: |
+            export AWS_ACCESS_KEY_ID=${<< parameters.access_key >>}
+            export AWS_SECRET_ACCESS_KEY=${<< parameters.secret_key >>}
             cd terraform
             terraform workspace select << parameters.workspace >>
             terraform apply -auto-approve tfapply
+
+  terraform-destroy:
+    working_directory: /tmp/project
+    docker:
+      - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.13.1
+    resource_class: small
+    steps:
+      - checkout
+      - run:
+          name: terraform destroy
+          command: |
+            export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID_dev}"
+            export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY_dev}"
+            cd terraform
+            terraform init -input=false -backend-config=../dev.s3.tfbackend
+            export CIRCLE_BRANCH="<< pipeline.parameters.GHA_Meta >>"
+            terraform workspace select ${SANITISED_CIRCLE_BRANCH}
+            terraform destroy -auto-approve
+      - run:
+          name: delete workspace
+          command: |
+            export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID_dev}"
+            export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY_dev}"
+            cd terraform/pipeline
+            terraform workspace select default
+            export CIRCLE_BRANCH="<< pipeline.parameters.GHA_Meta >>"
+            export SANITISED_CIRCLE_BRANCH=$(echo ${CIRCLE_BRANCH:0:30} | tr -c '[:alnum:]\n' '-' | tr '[:upper:]' '[:lower:]')
+            terraform workspace delete ${SANITISED_CIRCLE_BRANCH}
 
 
 workflows:
@@ -144,6 +193,9 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
+          access_key: AWS_ACCESS_KEY_ID
+          secret_key: AWS_SECRET_ACCESS_KEY
+          aws_account: "prod"
           workspace: "prod"
           requires:
             - run-checks
@@ -152,9 +204,13 @@ workflows:
           requires:
             - terraform-plan
       - terraform-apply:
+          access_key: AWS_ACCESS_KEY_ID
+          secret_key: AWS_SECRET_ACCESS_KEY
+          aws_account: "prod"
           workspace: "prod"
           requires:
             - plan-approval
+
   plan-and-deploy-to-dev:
     unless: << pipeline.parameters.GHA_Action >>
     jobs:
@@ -166,6 +222,10 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
+          access_key: AWS_ACCESS_KEY_ID_dev
+          secret_key: AWS_SECRET_ACCESS_KEY_dev
+          aws_account: "dev"
+          workspace: "default"
           requires:
             - run-checks
       - plan-approval:
@@ -173,8 +233,13 @@ workflows:
           requires:
             - terraform-plan
       - terraform-apply:
+          access_key: AWS_ACCESS_KEY_ID_dev
+          secret_key: AWS_SECRET_ACCESS_KEY_dev
+          aws_account: "dev"
+          workspace: "default"
           requires:
             - plan-approval
+
   plan-and-commit-to-branch:
     unless: << pipeline.parameters.GHA_Action >>
     jobs:
@@ -188,5 +253,14 @@ workflows:
           requires:
             - lint-terraform
       - terraform-plan:
+          access_key: AWS_ACCESS_KEY_ID_dev
+          secret_key: AWS_SECRET_ACCESS_KEY_dev
+          aws_account: "dev"
+          workspace: ${CIRCLE_BRANCH}
           requires:
             - run-checks
+
+  delete-development-environment:
+    when: << pipeline.parameters.GHA_Action >>
+    jobs:
+      - terraform-destroy

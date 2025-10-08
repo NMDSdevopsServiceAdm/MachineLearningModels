@@ -27,7 +27,7 @@ class ModelVersionManager:
     Parameter Store.
     """
 
-    def __init__(self, s3_bucket, s3_prefix, param_store_name):
+    def __init__(self, s3_bucket, s3_prefix, param_store_name, default_patch=False):
         if param_store_name[0] != "/":
             print(
                 "Parameter store name must be fully-qualified, including leading slash, e.g. /my/model/version"
@@ -38,6 +38,7 @@ class ModelVersionManager:
         self.ssm_client = boto3.client("ssm", region_name=REGION)
         self.s3_client = boto3.client("s3", region_name=REGION)
         self.param_store_name = param_store_name
+        self.default_patch = default_patch
 
     def get_current_version(self) -> str:
         """
@@ -188,14 +189,16 @@ class ModelVersionManager:
         Args:
             model (BaseEstimator): The trained model object.
         """
-        should_save = input(
-            "Do you want to save this new model version? (only yes to save): "
-        ).lower()
-        if should_save != "yes":
-            print("Model not saved. Exiting.")
-            return
-
-        change_type = self.prompt_change()
+        if self.default_patch:
+            change_type = EnumChangeType.PATCH
+        else:
+            should_save = input(
+                "Do you want to save this new model version? (only yes to save): "
+            ).lower()
+            if should_save != "yes":
+                print("Model not saved. Exiting.")
+                return
+            change_type = self.prompt_change()
 
         new_version = self.get_new_version(change_type)
         self.save_model(model, new_version)

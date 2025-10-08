@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export PIPENV_VERBOSITY=-1
 
 echo "Running pytest..."
 pipenv run pytest -vrrP --cov || exit 1
@@ -13,7 +14,7 @@ echo "Running pydoclint..."
 pipenv run pydoclint --style=google --quiet . || exit 1
 
 echo "Running pip-audit..."
-pipenv run pip-audit || exit 1
+pipenv run pip-audit -r <(pipenv requirements) || exit 1
 
 echo "Running bandit..."
 pipenv run bandit -c bandit.yaml -r utilities || exit 1

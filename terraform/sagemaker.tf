@@ -25,13 +25,13 @@ resource "aws_sagemaker_code_repository" "models_repo" {
 resource "aws_sagemaker_notebook_instance_lifecycle_configuration" "models_lifecycle_config" {
   name = "${local.env}-models-lifecycle"
   on_start = base64encode(templatefile("${path.module}/scripts/notebooks-on-start.sh.tpl", { env = local.env,
-  bucket = var.config_bucket_name }))
+  bucket = var.env_config[local.env].config_bucket_name }))
 
   depends_on = [aws_s3_object.autostop_script]
 }
 
 resource "aws_s3_object" "autostop_script" {
-  bucket = var.config_bucket_name
+  bucket = var.env_config[local.env].config_bucket_name
   key    = "scripts/python/${local.env}/autostop.py"
   source = "scripts/autostop.py"
   etag   = filemd5("scripts/autostop.py")
