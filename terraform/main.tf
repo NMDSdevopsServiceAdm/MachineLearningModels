@@ -12,10 +12,10 @@ provider "aws" {
 terraform {
   backend "s3" {
     # Bucket defined in ../*.s3.tfbackend
-    key            = "terraform/statefiles/machine-learning-models/backend.tfstate"
-    region         = "eu-west-2"
-    dynamodb_table = "models-terraform-locks"
-    encrypt        = true
+    key          = "terraform/statefiles/machine-learning-models/backend.tfstate"
+    region       = "eu-west-2"
+    use_lockfile = true
+    encrypt      = true
   }
 }
 
