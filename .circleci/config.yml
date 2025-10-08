@@ -136,7 +136,7 @@ jobs:
         type: string
         default: "default"
     docker:
-      - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.2.1
+      - image: docker.mirror.hashicorp.services/hashicorp/terraform:1.13.1
     resource_class: small
     steps:
       - attach_workspace:
