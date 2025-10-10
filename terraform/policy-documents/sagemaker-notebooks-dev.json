@@ -12,7 +12,8 @@
             "Resource": [
                 "arn:aws:s3:::sfc-*-datasets/*",
                 "arn:aws:s3:::sfc-*-datasets/*",
-                "arn:aws:s3:::sfc-mt-sagemaker-demo-dev/*"
+                "arn:aws:s3:::sfc-mt-sagemaker-demo-dev/*",
+                "arn:aws:s3:::skillsforcare-nonprod"
             ]
         },
         {
@@ -22,7 +23,7 @@
                 "s3:DeleteObject"
             ],
             "Resource": [
-                "arn:aws:s3:::sfc-*"
+                "arn:aws:s3:::sfc-main-*"
             ]
         },
         {
